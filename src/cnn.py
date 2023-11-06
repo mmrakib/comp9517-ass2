@@ -1,9 +1,9 @@
-from elpv.utils.elpv_reader import load_dataset
+# from elpv.utils.elpv_reader import load_dataset
 import numpy as np
 
 from tensorflow import keras
 from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
+# from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
 
 import cv2 as cv
 import matplotlib.pyplot as plt
@@ -38,6 +38,10 @@ def initialize_model(version = "vgg19"):
 
 
 def train_model(model, X_train, y_train, path, optimizer = "adam", batch_size = 16, epochs = 100, validation_split = 0.2):
+    label_encoder = LabelEncoder()
+    y_train = label_encoder.fit_transform(y_train)
+    y_train = keras.utils.to_categorical(y_train)
+    
     model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=['accuracy'])
     history = model.fit(X_train, y_train, epochs = epochs, validation_split = validation_split, batch_size = batch_size)
     model.save(path)
