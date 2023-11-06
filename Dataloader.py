@@ -10,7 +10,9 @@ from sklearn.model_selection import train_test_split
 
 from matplotlib import pyplot as plt
 
+from pyBench import timefunc
 
+@timefunc
 def load_and_preprocess_dataset():
     images, probs, types = load_dataset()
     images = images.astype("float32") / 255
@@ -18,19 +20,15 @@ def load_and_preprocess_dataset():
     images = contrast_stretch(images)
     
     images = remove_cell_wires(images)
-
-    images, probs, types = expand_dataset(images, probs, types)
-
     images = np.float32(images)
-    plt.subplot(2,2,1)
-    plt.imshow(cv.cvtColor(images[3*4], cv.COLOR_BGR2RGB))
-    plt.subplot(2,2,2)
-    plt.imshow(cv.cvtColor(images[70*4], cv.COLOR_BGR2RGB))
-    plt.subplot(2,2,3)
-    plt.imshow(cv.cvtColor(images[2*4], cv.COLOR_BGR2RGB))
-    plt.subplot(2,2,4)
-    plt.imshow(cv.cvtColor(images[893*4+1], cv.COLOR_BGR2RGB))
-    plt.show()
+
+    probs = LabelEncoder().fit_transform(probs)
+    probs = keras.utils.to_categorical(probs)
+    
+    images_3chan = np.zeros([images.shape[0], images.shape[1], images.shape[2], 3])
+    for i in range(0,images.shape[0]):
+        images_3chan[i] = cv.cvtColor(images[i], cv.COLOR_GRAY2BGR)
+    images = images_3chan
 
     mono_images = images[types == "mono"]
     mono_probs = probs[types == "mono"]
@@ -38,16 +36,43 @@ def load_and_preprocess_dataset():
     poly_images = images[types == "poly"]
     poly_probs = probs[types == "poly"]
 
-    probs_oh = probs
-    probs_label_encoder = LabelEncoder()
-    probs_oh = probs_label_encoder.fit_transform(probs_oh)
-    probs_oh = keras.utils.to_categorical(probs_oh)
+    labels_mono = np.concatenate((mono_probs, np.full([mono_probs.shape[0],4], "mono")),axis=1)
+    labels_poly = np.concatenate((poly_probs, np.full([poly_probs.shape[0],4], "poly")),axis=1)
 
-    images_3 = np.dstack([images] * 3)
-    images_3 = np.reshape(images_3, (-1, 300, 300, 3))
+    train_m_imgs, test_m_imgs, train_m_labs, test_m_labs = \
+            train_test_split(mono_images, labels_mono, test_size=0.25, random_state=0, shuffle=False)
+    train_p_imgs, test_p_imgs, train_p_labs, test_p_labs = \
+            train_test_split(poly_images, labels_poly, test_size=0.25, random_state=0, shuffle=False)
+    
+    train_imgs = np.concatenate((train_m_imgs, train_p_imgs), axis=0) 
+    train_labs = np.concatenate((train_m_labs, train_p_labs), axis=0)
+    test_imgs  = np.concatenate((test_m_imgs,  test_p_imgs),  axis=0) 
+    test_labs  = np.concatenate((test_m_labs,  test_p_labs),  axis=0)
 
-    X_train, X_test, y_train, y_test = train_test_split(images_3, probs_oh, test_size=0.25, random_state=50)
 
+    train_imgs, train_labs = expand_dataset(train_imgs, train_labs)
+
+    rand_seed1 = np.random.randint(1, 1000000000000)
+    rand_seed2 = np.random.randint(1, 1000000000000)
+    np.random.seed(rand_seed1)
+    train_imgs = np.random.shuffle(train_imgs)
+    np.random.seed(rand_seed1)
+    train_labs = np.random.shuffle(train_labs)
+    np.random.seed(rand_seed2)
+    test_imgs  = np.random.shuffle(test_imgs)
+    np.random.seed(rand_seed2)
+    test_labs  = np.random.shuffle(test_labs)
+
+    train_probs = train_labs[:,0]
+    train_types = train_labs[:,1]
+    test_probs  = test_labs[:,0]
+    test_types  = test_labs[:,1]
+
+    return train_imgs, train_probs, train_types, test_imgs, test_probs, test_types
+
+
+
+@timefunc
 def contrast_stretch(imgs):                                                                                             #contrast stretching
     for i in range(0, imgs.shape[0]):                              
         imgs[i] = calc_contrast_stretch(imgs[i], imgs[i].min()+0.1, imgs[i].max())
@@ -68,7 +93,7 @@ def calc_contrast_stretch(img, min_pix_val_in, max_pix_val_in):
     img_out = np.clip(img_out, min_pix_val_out, max_pix_val_out)
     return img_out
 
-
+@timefunc
 def remove_cell_wires(imgs):     
     imgs_tmp = np.zeros([imgs.shape[0], 240, 280])
     crop = [10,250, 10,290]
@@ -117,12 +142,12 @@ def remove_wire(img, height, width):
     return np.delete(img, np.s_[height - math.floor(width/2):math.ceil(height + width/2)], 0)
 #.7
 
-def expand_dataset(imgs, probs, types):                                                                                 #augmentation
+@timefunc
+def expand_dataset(imgs, labs):                                                                                 #augmentation
     orig_size = imgs.shape[0]
 
     imgs = imgs.repeat(4, axis=0)
-    probs  = probs.repeat(4)
-    types  = types.repeat(4)
+    labs  = labs.repeat(4, axis=0)
 
     for i in range(0, orig_size):
         i_tmp = 4*i
@@ -130,7 +155,7 @@ def expand_dataset(imgs, probs, types):                                         
         imgs[i_tmp + 2] = np.flip(imgs[i_tmp + 1], 1)                                               #vertical and horizontal flip
         imgs[i_tmp + 3] = np.flip(imgs[i_tmp], 1)                                                   #horizontal flip
 
-    return imgs, probs, types
+    return imgs, labs
     
 
 
