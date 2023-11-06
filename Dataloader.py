@@ -8,6 +8,8 @@ from tensorflow import keras
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 
+from matplotlib import pyplot as plt
+
 from pyBench import timefunc
 
 @timefunc
@@ -17,50 +19,26 @@ def load_and_preprocess_dataset():
 
     images = contrast_stretch(images)
     
+    
     images = remove_cell_wires(images)
     images = np.float32(images)
-    
-    images_3chan = np.zeros([images.shape[0], images.shape[1], images.shape[2], 3])
-    for i in range(0,images.shape[0]):
-        images_3chan[i] = cv.cvtColor(images[i], cv.COLOR_GRAY2BGR)
-    images = images_3chan
 
-    mono_images = images[types == "mono"]
-    mono_probs = probs[types == "mono"]
+    images = make_3_channel(images)
 
-    poly_images = images[types == "poly"]
-    poly_probs = probs[types == "poly"]
+    train_m_imgs, test_m_imgs, train_m_probs, test_m_probs, \
+            train_p_imgs, test_p_imgs, train_p_probs, test_p_probs =\
+            split_sets(images, probs, types)
 
-    train_m_imgs, test_m_imgs, train_m_probs, test_m_probs = \
-            train_test_split(mono_images, mono_probs, test_size=0.25, random_state=0, shuffle=False)
-    train_p_imgs, test_p_imgs, train_p_probs, test_p_probs = \
-            train_test_split(poly_images, poly_probs, test_size=0.25, random_state=0, shuffle=False)
-    
-    train_imgs = np.concatenate((train_m_imgs, train_p_imgs), axis=0) 
-    train_probs = np.concatenate((train_m_probs, train_p_probs), axis=0)
-    train_types = np.concatenate((np.full([train_probs.shape[0],4], "mono"), np.full([train_probs.shape[0],4], "poly")), axis=0)
-    test_imgs  = np.concatenate((test_m_imgs,  test_p_imgs),  axis=0) 
-    test_probs  = np.concatenate((test_m_probs,  test_p_probs),  axis=0)
-    test_types = np.concatenate((np.full([test_probs.shape[0],4], "mono"), np.full([test_probs.shape[0],4], "poly")), axis=0)
-
+    train_imgs, train_probs, train_types, test_imgs, test_probs, test_types =\
+            concat_sets(train_m_imgs, test_m_imgs, train_m_probs, test_m_probs, \
+            train_p_imgs, test_p_imgs, train_p_probs, test_p_probs)
 
     train_imgs, train_probs, train_types = expand_dataset(train_imgs, train_probs, train_types)
     test_imgs, test_probs, test_types    = expand_dataset(test_imgs, test_probs, test_types)
 
-    rand_seed1 = np.random.randint(1, 2147483647)
-    rand_seed2 = np.random.randint(1, 2147483647)
-    np.random.seed(rand_seed1)
-    np.random.shuffle(train_imgs)
-    np.random.seed(rand_seed1)
-    np.random.shuffle(train_probs)
-    np.random.seed(rand_seed1)
-    np.random.shuffle(train_types)
-    np.random.seed(rand_seed2)
-    np.random.shuffle(test_imgs)
-    np.random.seed(rand_seed2)
-    np.random.shuffle(test_probs)
-    np.random.seed(rand_seed2)
-    np.random.shuffle(train_types)
+    train_imgs, train_probs, train_types, test_imgs, test_probs, test_types =\
+            shuffle_set(train_imgs, train_probs, train_types, test_imgs, test_probs, test_types)
+
 
     return train_imgs, train_probs, train_types, test_imgs, test_probs, test_types
 
@@ -89,8 +67,9 @@ def calc_contrast_stretch(img, min_pix_val_in, max_pix_val_in):
 
 @timefunc
 def remove_cell_wires(imgs):     
-    imgs_tmp = np.zeros([imgs.shape[0], 240, 280])
-    crop = [10,250, 10,290]
+    crop = 10
+    end_size = [280,280] #[240, 280]
+    imgs_tmp = np.zeros([imgs.shape[0], end_size[0], end_size[1]])
 
     for i in range(0, imgs.shape[0]): 
         score_a,height_a,width_a = find_wire(imgs[i], 50)
@@ -100,13 +79,15 @@ def remove_cell_wires(imgs):
         score_e,height_e,width_e = find_wire(imgs[i], 250)
         if((score_a+score_c+score_e)/3 < (score_b+score_d)/2):
             img_tmp = remove_wire(imgs[i], height_a, width_a)
-            img_tmp = remove_wire(img_tmp, height_c-width_a, width_c)
-            img_tmp = remove_wire(img_tmp, height_e-(width_a+width_c),width_e)
-            imgs_tmp[i] = cv.resize(img_tmp, (300,260))[crop[0]:crop[1], crop[2]:crop[3]]
+            img_tmp = remove_wire(img_tmp, height_c, width_c)
+            img_tmp = remove_wire(img_tmp, height_e, width_e)
+            imgs_tmp[i] = cv.resize(img_tmp, (end_size[0]+2*crop,end_size[0]+2*crop)\
+                                    )[crop:end_size[0]+crop, crop:end_size[1]+crop]
         else:
             img_tmp = remove_wire(imgs[i], height_b, width_b)
-            img_tmp = remove_wire(img_tmp, height_d-width_b, width_d)
-            imgs_tmp[i] = cv.resize(img_tmp, (300,270))[crop[0]:crop[1], crop[2]:crop[3]]
+            img_tmp = remove_wire(img_tmp, height_d, width_d)
+            imgs_tmp[i] = cv.resize(img_tmp, (end_size[0]+2*crop,end_size[0]+2*crop)\
+                                    )[crop:end_size[0]+crop, crop:end_size[1]+crop]
     return imgs_tmp
 
 def find_wire(img, start_height):
@@ -133,7 +114,10 @@ def find_wire(img, start_height):
     return score, mid_point, bottom_point - top_point + 1
 
 def remove_wire(img, height, width):
-    return np.delete(img, np.s_[height - math.floor(width/2):math.ceil(height + width/2)], 0)
+    img[height - math.floor(width/2):math.ceil(height + width/2)] = \
+        np.full([width, img.shape[1]], 0.78)
+    return img
+    #return np.delete(img, np.s_[height - math.floor(width/2):math.ceil(height + width/2)], 0)
 #.7
 
 @timefunc
@@ -152,4 +136,53 @@ def expand_dataset(imgs, probs, types):                                         
 
     return imgs, probs, types
     
+@timefunc
+def make_3_channel(imgs):
+    imgs_3c = np.zeros([imgs.shape[0], imgs.shape[1], imgs.shape[2], 3])
+    for i in range(0,imgs.shape[0]):
+        imgs_3c[i] = cv.cvtColor(imgs[i], cv.COLOR_GRAY2BGR)
+    return imgs_3c
+
+@timefunc
+def split_sets(imgs, probs, types):
+    train_m_imgs, test_m_imgs, train_m_probs, test_m_probs = \
+            train_test_split(imgs[types == "mono"], probs[types == "mono"], test_size=0.25, random_state=0, shuffle=False)
+    train_p_imgs, test_p_imgs, train_p_probs, test_p_probs = \
+            train_test_split(imgs[types == "poly"], probs[types == "poly"], test_size=0.25, random_state=0, shuffle=False)
+    return train_m_imgs, test_m_imgs, train_m_probs, test_m_probs, train_p_imgs, test_p_imgs, train_p_probs, test_p_probs
+
+@timefunc
+def concat_sets(train_m_imgs, test_m_imgs, train_m_probs, test_m_probs, train_p_imgs, test_p_imgs, train_p_probs, test_p_probs):
+    train_imgs = np.concatenate((train_m_imgs, train_p_imgs), axis=0) 
+    del train_m_imgs, train_p_imgs
+    train_probs = np.concatenate((train_m_probs, train_p_probs), axis=0)
+    del train_m_probs, train_p_probs
+    train_types = np.concatenate((np.full([train_probs.shape[0],4], "mono"), np.full([train_probs.shape[0],4], "poly")), axis=0)
+    test_imgs  = np.concatenate((test_m_imgs,  test_p_imgs),  axis=0) 
+    del test_m_imgs, test_p_imgs
+    test_probs  = np.concatenate((test_m_probs,  test_p_probs),  axis=0)
+    del test_m_probs, test_p_probs
+    test_types = np.concatenate((np.full([test_probs.shape[0],4], "mono"), np.full([test_probs.shape[0],4], "poly")), axis=0)
+    return train_imgs, train_probs, train_types, test_imgs, test_probs, test_types
+
+@timefunc
+def shuffle_set(train_imgs, train_probs, train_types, test_imgs, test_probs, test_types):
+    rand_seed1 = np.random.randint(1, 2147483647)
+    rand_seed2 = np.random.randint(1, 2147483647)
+    np.random.seed(rand_seed1)
+    np.random.shuffle(train_imgs)
+    np.random.seed(rand_seed1)
+    np.random.shuffle(train_probs)
+    np.random.seed(rand_seed1)
+    np.random.shuffle(train_types)
+    np.random.seed(rand_seed2)
+    np.random.shuffle(test_imgs)
+    np.random.seed(rand_seed2)
+    np.random.shuffle(test_probs)
+    np.random.seed(rand_seed2)
+    np.random.shuffle(train_types)
+
+    return train_imgs, train_probs, train_types, test_imgs, test_probs, test_types
+
+
 load_and_preprocess_dataset()
