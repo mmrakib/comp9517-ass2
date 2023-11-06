@@ -34,38 +34,44 @@ def load_and_preprocess_dataset():
     poly_images = images[types == "poly"]
     poly_probs = probs[types == "poly"]
 
-    labels_mono = np.concatenate((mono_probs, np.full([mono_probs.shape[0],4], "mono")),axis=1)
-    labels_poly = np.concatenate((poly_probs, np.full([poly_probs.shape[0],4], "poly")),axis=1)
+    #labels_mono = np.concatenate((mono_probs, np.full([mono_probs.shape[0],4], "mono")),axis=1)
+    #labels_poly = np.concatenate((poly_probs, np.full([poly_probs.shape[0],4], "poly")),axis=1)
 
-    train_m_imgs, test_m_imgs, train_m_labs, test_m_labs = \
-            train_test_split(mono_images, labels_mono, test_size=0.25, random_state=0, shuffle=False)
-    train_p_imgs, test_p_imgs, train_p_labs, test_p_labs = \
-            train_test_split(poly_images, labels_poly, test_size=0.25, random_state=0, shuffle=False)
+    train_m_imgs, test_m_imgs, train_m_probs, test_m_probs = \
+            train_test_split(mono_images, mono_probs, test_size=0.25, random_state=0, shuffle=False)
+    train_p_imgs, test_p_imgs, train_p_probs, test_p_probs = \
+            train_test_split(poly_images, poly_probs, test_size=0.25, random_state=0, shuffle=False)
     
     train_imgs = np.concatenate((train_m_imgs, train_p_imgs), axis=0) 
-    train_labs = np.concatenate((train_m_labs, train_p_labs), axis=0)
+    train_probs = np.concatenate((train_m_probs, train_p_probs), axis=0)
+    train_types = np.concatenate((np.full([train_probs.shape[0],4], "mono"), np.full([train_probs.shape[0],4], "poly")), axis=0)
     test_imgs  = np.concatenate((test_m_imgs,  test_p_imgs),  axis=0) 
-    test_labs  = np.concatenate((test_m_labs,  test_p_labs),  axis=0)
+    test_probs  = np.concatenate((test_m_probs,  test_p_probs),  axis=0)
+    test_types = np.concatenate((np.full([test_probs.shape[0],4], "mono"), np.full([test_probs.shape[0],4], "poly")), axis=0)
 
 
-    train_imgs, train_labs = expand_dataset(train_imgs, train_labs)
-    test_imgs, test_labs   = expand_dataset(test_imgs, test_labs)
+    train_imgs, train_probs = expand_dataset(train_imgs, train_probs, train_types)
+    test_imgs, test_probs   = expand_dataset(test_imgs, test_probs, test_types)
 
     rand_seed1 = np.random.randint(1, 2147483647)
     rand_seed2 = np.random.randint(1, 2147483647)
     np.random.seed(rand_seed1)
     np.random.shuffle(train_imgs)
     np.random.seed(rand_seed1)
-    np.random.shuffle(train_labs)
+    np.random.shuffle(train_probs)
+    np.random.seed(rand_seed1)
+    np.random.shuffle(train_types)
     np.random.seed(rand_seed2)
     np.random.shuffle(test_imgs)
     np.random.seed(rand_seed2)
-    np.random.shuffle(test_labs)
+    np.random.shuffle(test_probs)
+    np.random.seed(rand_seed2)
+    np.random.shuffle(train_types)
 
-    train_probs = train_labs[:,0]
-    train_types = train_labs[:,1]
-    test_probs  = test_labs[:,0]
-    test_types  = test_labs[:,1]
+    #train_probs = train_probs[:,0]
+    #train_types = train_probs[:,1]
+    #test_probs  = test_probs[:,0]
+    #test_types  = test_probs[:,1]
 
     return train_imgs, train_probs, train_types, test_imgs, test_probs, test_types
 
@@ -142,11 +148,12 @@ def remove_wire(img, height, width):
 #.7
 
 @timefunc
-def expand_dataset(imgs, labs):                                                                                 #augmentation
+def expand_dataset(imgs, probs, types):                                                                                 #augmentation
     orig_size = imgs.shape[0]
 
     imgs = imgs.repeat(4, axis=0)
-    labs  = labs.repeat(4, axis=0)
+    probs  = probs.repeat(4, axis=0)
+    types  = types.repeat(4, axis=0)
 
     for i in range(0, orig_size):
         i_tmp = 4*i
@@ -154,5 +161,6 @@ def expand_dataset(imgs, labs):                                                 
         imgs[i_tmp + 2] = np.flip(imgs[i_tmp + 1], 1)                                               #vertical and horizontal flip
         imgs[i_tmp + 3] = np.flip(imgs[i_tmp], 1)                                                   #horizontal flip
 
-    return imgs, labs
+    return imgs, probs, types
     
+load_and_preprocess_dataset()
