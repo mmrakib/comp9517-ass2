@@ -37,14 +37,14 @@ class ELPVData:
 
     def get_training_data(self):
         return {
-            "training_images": self.training_images,
-            "training_labels": self.training_labels,
-            "training_probs": self.training_probs
+            "images": self.training_images,
+            "labels": self.training_labels,
+            "probs": self.training_probs
         }
 
     def get_testing_data(self):
         return {
-            "testing_images": self.testing_images,
-            "testing_labels": self.testing_labels,
-            "testing_probs": self.testing_probs
+            "images": self.testing_images,
+            "labels": self.testing_labels,
+            "probs": self.testing_probs
         }
