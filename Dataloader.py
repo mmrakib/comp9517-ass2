@@ -51,17 +51,18 @@ def load_and_preprocess_dataset():
 
 
     train_imgs, train_labs = expand_dataset(train_imgs, train_labs)
+    test_imgs, test_labs   = expand_dataset(test_imgs, test_labs)
 
-    rand_seed1 = np.random.randint(1, 1000000000000)
-    rand_seed2 = np.random.randint(1, 1000000000000)
+    rand_seed1 = np.random.randint(1, 2147483647)
+    rand_seed2 = np.random.randint(1, 2147483647)
     np.random.seed(rand_seed1)
-    train_imgs = np.random.shuffle(train_imgs)
+    np.random.shuffle(train_imgs)
     np.random.seed(rand_seed1)
-    train_labs = np.random.shuffle(train_labs)
+    np.random.shuffle(train_labs)
     np.random.seed(rand_seed2)
-    test_imgs  = np.random.shuffle(test_imgs)
+    np.random.shuffle(test_imgs)
     np.random.seed(rand_seed2)
-    test_labs  = np.random.shuffle(test_labs)
+    np.random.shuffle(test_labs)
 
     train_probs = train_labs[:,0]
     train_types = train_labs[:,1]
