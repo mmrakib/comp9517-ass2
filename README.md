@@ -3,11 +3,11 @@
 This is the offical code repository for group *Adult Supervision*.
 
 **Developers**
-Mohammad M. Rakib (z5361151)
-adrianne_sun (z)
-JaymooHackray (z)
-Plushii (z)
-roterex (z)
+- Mohammad M. Rakib (z5361151)
+- adrianne_sun (z5373505)
+- JaymooHackray (z)
+- Plushii (z)
+- roterex (z5169764)
 
 **Description**
 The objective of this project is to utilise computer vision algorithms on electroluminescence (EL) images to analyse the health of photo-voltaic (PV) cells on solar panels.
