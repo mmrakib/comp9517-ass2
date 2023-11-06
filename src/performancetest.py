@@ -1,6 +1,7 @@
 import numpy as np
 import cv2 as cv
 from sklearn.metrics import confusion_matrix, accuracy_score, f1_score
+import matplotlib as plt
 
 from elpvdata import ELPVData
 
@@ -62,3 +63,23 @@ class PerformanceTest:
             'accuracy': accuracy,
             'f1_score': f1
         }
+
+    @staticmethod
+    def plot_confusion_matrix(confusion_matrix, classes, title='Confusion Matrix', cmap=plt.cm.Blues):
+        plt.imshow(confusion_matrix, interpolation='nearest', cmap=cmap)
+        plt.title(title)
+        plt.colorbar()
+
+        tick_marks = np.arange(len(classes))
+        plt.xticks(tick_marks, classes, rotation=45)
+        plt.yticks(tick_marks, classes)
+
+        fmt = 'd'
+        thresh = confusion_matrix.max() / 2.
+        for i in range(confusion_matrix.shape[0]):
+            for j in range(confusion_matrix.shape[1]):
+                plt.text(j, i, format(confusion_matrix[i, j], fmt), horizontalalignment="center", color="white" if confusion_matrix[i, j] > thresh else "black")
+
+        plt.tight_layout()
+        plt.ylabel('True Label')
+        plt.xlabel('Predicted Label')
