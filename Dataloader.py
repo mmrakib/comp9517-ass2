@@ -158,7 +158,3 @@ def expand_dataset(imgs, labs):                                                 
 
     return imgs, labs
     
-
-
-
-load_and_preprocess_dataset()
