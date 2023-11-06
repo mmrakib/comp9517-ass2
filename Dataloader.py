@@ -2,6 +2,7 @@ from elpv.utils.elpv_reader import load_dataset
 
 import cv2 as cv
 import numpy as np
+import math
 
 from tensorflow import keras
 from sklearn.preprocessing import LabelEncoder
@@ -16,19 +17,15 @@ def load_and_preprocess_dataset():
 
     images = contrast_stretch(images)
     
-    remove_cell_wires(images)
+    images = remove_cell_wires(images)
 
     images, probs, types = expand_dataset(images, probs, types)
 
-    a = images[2*4][76].mean()
-    b = images[893*4+1][76].mean()
-    c = images[2*4][76].std()
-    d = images[893*4+1][76].std()
-
+    images = np.float32(images)
     plt.subplot(2,2,1)
-    plt.imshow(cv.cvtColor(images[14*4], cv.COLOR_BGR2RGB))
+    plt.imshow(cv.cvtColor(images[3*4], cv.COLOR_BGR2RGB))
     plt.subplot(2,2,2)
-    plt.imshow(cv.cvtColor(images[22*4], cv.COLOR_BGR2RGB))
+    plt.imshow(cv.cvtColor(images[70*4], cv.COLOR_BGR2RGB))
     plt.subplot(2,2,3)
     plt.imshow(cv.cvtColor(images[2*4], cv.COLOR_BGR2RGB))
     plt.subplot(2,2,4)
@@ -69,45 +66,56 @@ def calc_contrast_stretch(img, min_pix_val_in, max_pix_val_in):
     range_multiplier = (max_pix_val_out - min_pix_val_out)/(max_pix_val_in - min_pix_val_in)
     img_out = (img + (-(min_pix_val_in))) * range_multiplier + min_pix_val_out
     img_out = np.clip(img_out, min_pix_val_out, max_pix_val_out)
-    #img_out = img_out.astype('float32') 
     return img_out
 
 
 def remove_cell_wires(imgs):     
-    height        = 300                                                                                       #crop out power wires from cell
-    height_mid    = 150
-    height_3_wire = 50
-    height_2_wire = 75
+    imgs_tmp = np.zeros([imgs.shape[0], 240, 280])
+    crop = [10,250, 10,290]
 
-    for i in range(0, 500):#imgs.shape[0]): 
-        score_a,height_a = find_wire(imgs[i], 50)
-        score_b,height_b = find_wire(imgs[i], 75)
-        score_c,height_c = find_wire(imgs[i], 150)
-        score_d,height_d = find_wire(imgs[i], 225)
-        score_e,height_e = find_wire(imgs[i], 250)
+    for i in range(0, imgs.shape[0]): 
+        score_a,height_a,width_a = find_wire(imgs[i], 50)
+        score_b,height_b,width_b = find_wire(imgs[i], 75)
+        score_c,height_c,width_c = find_wire(imgs[i], 150)
+        score_d,height_d,width_d = find_wire(imgs[i], 225)
+        score_e,height_e,width_e = find_wire(imgs[i], 250)
         if((score_a+score_c+score_e)/3 < (score_b+score_d)/2):
-            remove_wire(imgs[0], height_a, 6)
-            remove_wire(imgs[0], height_c, 6)
-            remove_wire(imgs[0], height_e, 6)
+            img_tmp = remove_wire(imgs[i], height_a, width_a)
+            img_tmp = remove_wire(img_tmp, height_c-width_a, width_c)
+            img_tmp = remove_wire(img_tmp, height_e-(width_a+width_c),width_e)
+            imgs_tmp[i] = cv.resize(img_tmp, (300,260))[crop[0]:crop[1], crop[2]:crop[3]]
         else:
-            remove_wire(imgs[0], height_b, 9)
-            remove_wire(imgs[0], height_d, 9)
-        
-    
-    # remove wire locs
+            img_tmp = remove_wire(imgs[i], height_b, width_b)
+            img_tmp = remove_wire(img_tmp, height_d-width_b, width_d)
+            imgs_tmp[i] = cv.resize(img_tmp, (300,270))[crop[0]:crop[1], crop[2]:crop[3]]
+    return imgs_tmp
 
 def find_wire(img, start_height):
+    test_score = img[start_height].std() * img[start_height].mean()
+    if(test_score > 0.1):
+        return test_score, start_height, 16
+
+    for i in range(start_height, start_height-10, -1):
+        top_point = i
+        top_point_score = img[top_point].std() * img[top_point].mean()
+        if(top_point_score > 0.12):
+            break
+    for i in range(start_height, start_height+15):
+        bottom_point = i
+        bottom_point_score = img[bottom_point].std() * img[bottom_point].mean()
+        if (bottom_point_score > top_point_score):
+            break
+    mid_point = int(round((top_point+bottom_point)/2, 0))
     score = -1
-    best_i = 0
-    for i in range(start_height-5, start_height+5):
+    for i in range(mid_point-3, mid_point+3):
         cur_score = img[i].std() * img[i].mean()
         if(cur_score < score or score < 0):
             score = cur_score
-            best_i = i
-    return score, best_i
+    return score, mid_point, bottom_point - top_point + 1
 
 def remove_wire(img, height, width):
-
+    return np.delete(img, np.s_[height - math.floor(width/2):math.ceil(height + width/2)], 0)
+#.7
 
 def expand_dataset(imgs, probs, types):                                                                                 #augmentation
     orig_size = imgs.shape[0]
@@ -117,7 +125,7 @@ def expand_dataset(imgs, probs, types):                                         
     types  = types.repeat(4)
 
     for i in range(0, orig_size):
-        i_tmp = 4*i;
+        i_tmp = 4*i
         imgs[i_tmp + 1] = np.flip(imgs[i_tmp], 0)                                                   #vertical flip
         imgs[i_tmp + 2] = np.flip(imgs[i_tmp + 1], 1)                                               #vertical and horizontal flip
         imgs[i_tmp + 3] = np.flip(imgs[i_tmp], 1)                                                   #horizontal flip

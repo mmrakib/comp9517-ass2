@@ -42,4 +42,4 @@ wrapt==1.14.1
 
 pillow
 matplotlib
-sklearn
+scikit-learn
