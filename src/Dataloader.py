@@ -13,13 +13,14 @@ from matplotlib import pyplot as plt
 from pyBench import timefunc
 
 @timefunc
-def load_and_preprocess_dataset(out_probs=[0,1,2,3], simple_probs=False, out_types="All", wire_removal="Crop", channels=1):
+def load_and_preprocess_dataset(out_probs=[0,1,2,3], simple_probs=False, out_types="All", wire_removal="Crop", channels=1, augment="All"):
     """
     :param out_probs: [0 = undamaged, 1 = mild, 2 = major, 3 = destroyed]
     :param simple_probs: true = set all probs > 0 to 1 (any damage = 1)
-    :param out_types: All, Mono, Poly
-    :param wire_removal: Crop, Gray
+    :param out_types: All, Mono, Poly (only return matching)
+    :param wire_removal: Crop, Gray 
     :param channels: 1 keep as 1 channel, 3 convert images to 3 channel
+    :param augment: All, Train, Test (which data to augment)
     """
     images, probs, types = load_dataset()
     images = images.astype("float32") / 255
@@ -58,8 +59,10 @@ def load_and_preprocess_dataset(out_probs=[0,1,2,3], simple_probs=False, out_typ
             len(test_probs[test_probs == 0.6666666666666666]), \
             len(test_probs[test_probs == 1]))
 
-    train_imgs, train_probs, train_types = expand_dataset(train_imgs, train_probs, train_types)
-    test_imgs, test_probs, test_types    = expand_dataset(test_imgs, test_probs, test_types)
+    if(augment == "All" or augment == "Train"):
+        train_imgs, train_probs, train_types = expand_dataset(train_imgs, train_probs, train_types)
+    if(augment == "All" or augment == "Test"):
+        test_imgs, test_probs, test_types    = expand_dataset(test_imgs, test_probs, test_types)
 
     if(channels == 3):
         images = make_3_channel(images)
