@@ -11,7 +11,7 @@ def initialize_model():
     model = keras.models.Sequential()
 
     #model.add(Hist(1))
-    model.add(keras.layers.Dense(4))
+    model.add(keras.layers.Dense(2))
     model.add(keras.layers.Softmax())
 
     return model
@@ -25,7 +25,7 @@ def train_model(model, x_train, y_train, optimizer="adam", batch_size = 16, epoc
     for i in range(0,x_train.shape[0]):
         x_train_h[i] = cv.calcHist(x_train[i],[0],None,[256],[0,1]).reshape([256])
 
-    #cv.normalize(x_train_h, x_train_h, alpha=0, beta=256, norm_type=cv.NORM_MINMAX)
+    cv.normalize(x_train_h, x_train_h, alpha=0, beta=256, norm_type=cv.NORM_MINMAX)
 
     plot_x = list(range(0,256))
     plt.subplot(2,2,1)
@@ -76,11 +76,13 @@ class Hist(keras.layers.Layer):
 import Dataloader
 
 train_imgs, train_probs, _, test_imgs, test_probs, _ = \
-        Dataloader.load_and_preprocess_dataset()
+        Dataloader.load_and_preprocess_dataset(out_types="Mono", simple_probs=True, wire_removal="Gray")
 
 
 
 model = initialize_model()
-history = train_model(model, train_imgs, train_probs, epochs=500, batch_size=500)
+history = train_model(model, train_imgs, train_probs, epochs=1000, batch_size=5000)
 plot_loss(history)
 plot_accuracy(history)
+
+a=1
