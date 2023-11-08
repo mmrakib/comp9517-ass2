@@ -183,4 +183,4 @@ def shuffle_set(train_imgs, train_probs, train_types, test_imgs, test_probs, tes
     return train_imgs, train_probs, train_types, test_imgs, test_probs, test_types
 
 
-#load_and_preprocess_dataset()
+load_and_preprocess_dataset()

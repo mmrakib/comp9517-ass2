@@ -50,7 +50,7 @@ class Hist(keras.layers.Layer):
         self.buckets  = buckets
 
     def call(self, inputs):
-        print([inputs])
+        print(type(inputs))
         a=1
         return cv.calcHist([inputs], channels=self.channels-1, mask=None,
                             histSize=[256], ranges=[0,1])
