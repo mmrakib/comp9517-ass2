@@ -27,6 +27,15 @@ def load_and_preprocess_dataset():
             train_p_imgs, test_p_imgs, train_p_probs, test_p_probs =\
             split_sets(images, probs, types)
 
+    #train_imgs = train_m_imgs
+    #train_probs = train_m_probs
+    #train_types = np.full([train_probs.shape[0],4], "mono")
+    #test_imgs = test_m_imgs
+    #test_probs = test_m_probs
+    #test_types = np.full([test_probs.shape[0],4], "mono")
+
+
+
     train_imgs, train_probs, train_types, test_imgs, test_probs, test_types =\
             concat_sets(train_m_imgs, test_m_imgs, train_m_probs, test_m_probs, \
             train_p_imgs, test_p_imgs, train_p_probs, test_p_probs)
@@ -183,4 +192,4 @@ def shuffle_set(train_imgs, train_probs, train_types, test_imgs, test_probs, tes
     return train_imgs, train_probs, train_types, test_imgs, test_probs, test_types
 
 
-load_and_preprocess_dataset()
+#load_and_preprocess_dataset()

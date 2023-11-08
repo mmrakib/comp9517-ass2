@@ -59,11 +59,13 @@ def plot_loss(history):
     plt.ylabel('Loss')
     plt.ylim([0.5, 5])
     plt.legend(loc='lower right')
+    plt.show()
 
 def plot_accuracy(history):
-    plt.plot(history.history['accuracy'], label='loss')
-    plt.plot(history.history['val_accuracy'], label = 'val_loss')
+    plt.plot(history.history['accuracy'], label='accuracy')
+    plt.plot(history.history['val_accuracy'], label = 'val_accuracy')
     plt.xlabel('Epoch')
     plt.ylabel('Accuracy')
-    plt.ylim([0.5, 5])
+    plt.ylim([0.5, 1])
     plt.legend(loc='lower right')
+    plt.show()
