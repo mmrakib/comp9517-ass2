@@ -11,7 +11,7 @@ def initialize_model():
     model = keras.models.Sequential()
 
     #model.add(Hist(1))
-    model.add(keras.layers.Dense(2))
+    model.add(keras.layers.Dense(4))
     model.add(keras.layers.Softmax())
 
     return model
@@ -33,7 +33,7 @@ def train_model(model, x_train, y_train, optimizer="adam", batch_size = 16, epoc
     plt.subplot(2,2,2)
     plt.plot(plot_x,x_train_h[324], 'r')
     plt.subplot(2,2,3)
-    plt.plot(plot_x,x_train_h[3000], 'r')
+    plt.plot(plot_x,x_train_h[1500], 'r')
     plt.subplot(2,2,4)
     plt.plot(plot_x,x_train_h[1469], 'r')
     plt.show()
@@ -59,7 +59,7 @@ def plot_accuracy(history):
     plt.plot(history.history['val_accuracy'], label = 'val_accuracy')
     plt.xlabel('Epoch')
     plt.ylabel('Accuracy')
-    plt.ylim([0.5, 1])
+    plt.ylim([0, 1])
     plt.legend(loc='lower right')
     plt.show()
 
@@ -76,7 +76,7 @@ class Hist(keras.layers.Layer):
 import Dataloader
 
 train_imgs, train_probs, _, test_imgs, test_probs, _ = \
-        Dataloader.load_and_preprocess_dataset(out_types="Mono", simple_probs=True, wire_removal="Gray")
+        Dataloader.load_and_preprocess_dataset()#out_types="Mono", simple_probs=False, wire_removal="Crop")
 
 
 

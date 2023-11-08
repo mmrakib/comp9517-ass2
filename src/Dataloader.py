@@ -42,8 +42,8 @@ def load_and_preprocess_dataset(out_probs=[0,1,2,3], simple_probs=False, out_typ
     images = remove_cell_wires(images, wire_removal)
     images = np.float32(images)
 
-    plt.imshow(images[0])
-    plt.show()
+    #plt.imshow(images[0])
+    #plt.show()
 
     train_imgs, train_probs, train_types, test_imgs, test_probs, test_types =\
             split_t_t_data(images, probs, types, out_types)
@@ -235,12 +235,12 @@ def split_t_t_data(imgs, probs, types, out_types):
     del train_m_imgs, train_p_imgs
     train_probs = np.concatenate((train_m_probs, train_p_probs), axis=0)
     del train_m_probs, train_p_probs
-    train_types = np.concatenate((np.full([train_probs.shape[0],4], "mono"), np.full([train_probs.shape[0],4], "poly")), axis=0)
+    train_types = np.concatenate((np.full([train_m_probs.shape[0],4], "mono"), np.full([train_p_probs.shape[0],4], "poly")), axis=0)
     test_imgs  = np.concatenate((test_m_imgs,  test_p_imgs),  axis=0) 
     del test_m_imgs, test_p_imgs
     test_probs  = np.concatenate((test_m_probs,  test_p_probs),  axis=0)
     del test_m_probs, test_p_probs
-    test_types = np.concatenate((np.full([test_probs.shape[0],4], "mono"), np.full([test_probs.shape[0],4], "poly")), axis=0)
+    test_types = np.concatenate((np.full([test_m_probs.shape[0],4], "mono"), np.full([test_p_probs.shape[0],4], "poly")), axis=0)
     return train_imgs, train_probs, train_types, test_imgs, test_probs, test_types
 
 @timefunc
