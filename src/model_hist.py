@@ -11,7 +11,7 @@ def initialize_model():
     model = keras.models.Sequential()
 
     #model.add(Hist(1))
-    model.add(keras.layers.Dense(4))
+    model.add(keras.layers.Dense(2))
     model.add(keras.layers.Softmax())
 
     return model
@@ -75,13 +75,15 @@ class Hist(keras.layers.Layer):
     
 import Dataloader
 
-train_imgs, train_probs, _, test_imgs, test_probs, _ = \
-        Dataloader.load_and_preprocess_dataset()#out_types="Mono", simple_probs=False, wire_removal="Crop")
+train_imgs, train_probs, train_types, test_imgs, test_probs, test_types = \
+        Dataloader.load_and_preprocess_dataset(out_types="All", simple_probs=False, wire_removal="Crop")
 
-
+train_types_n = np.zeros(train_types.shape[0])
+for i in range(0, train_types.shape[0]):
+    train_types_n[i] = train_types[i] == "mono"
 
 model = initialize_model()
-history = train_model(model, train_imgs, train_probs, epochs=1000, batch_size=5000)
+history = train_model(model, train_imgs, train_types_n, epochs=1000, batch_size=5000)
 plot_loss(history)
 plot_accuracy(history)
 
