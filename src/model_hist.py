@@ -13,7 +13,7 @@ def initialize_model():
 
     #model.add(Hist(1))
     model.add(tf.keras.Input(shape=(256,)))
-    model.add(keras.layers.Dense(8, activation='relu'))
+    model.add(keras.layers.Dense(100, activation='relu'))
     model.add(keras.layers.Dense(4))
     model.add(keras.layers.Softmax())
 
@@ -73,12 +73,12 @@ class Hist(keras.layers.Layer):
 import Dataloader
 
 train_imgs, train_probs, train_types, test_imgs, test_probs, test_types = \
-        Dataloader.load_and_preprocess_dataset(out_types="Mono", simple_probs=False, wire_removal="Crop", augment="Train")
+        Dataloader.load_and_preprocess_dataset(out_types="All", simple_probs=False, wire_removal="Crop", augment="All")
 
 train_types_n = (train_types == "mono")
 
 model = initialize_model()
-history = train_model(model, train_imgs, train_probs, epochs=1000, batch_size=5000)
+history = train_model(model, train_imgs, train_probs, epochs=1000, batch_size=10000)
 plot_loss(history)
 plot_accuracy(history)
 

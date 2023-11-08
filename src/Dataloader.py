@@ -13,7 +13,8 @@ from matplotlib import pyplot as plt
 from pyBench import timefunc
 
 @timefunc
-def load_and_preprocess_dataset(out_probs=[0,1,2,3], simple_probs=False, out_types="All", wire_removal="Crop", channels=1, augment="All"):
+def load_and_preprocess_dataset(out_probs=[0,1,2,3], simple_probs=False, out_types="All", 
+                                wire_removal="Crop", channels=1, augment="All", aug_types=["Flip", "Rot", "Bright"]):
     """
     :param out_probs: [0 = undamaged, 1 = mild, 2 = major, 3 = destroyed]
     :param simple_probs: true = set all probs > 0 to 1 (any damage = 1)
@@ -60,9 +61,9 @@ def load_and_preprocess_dataset(out_probs=[0,1,2,3], simple_probs=False, out_typ
             len(test_probs[test_probs == 1]))
 
     if(augment == "All" or augment == "Train"):
-        train_imgs, train_probs, train_types = expand_dataset(train_imgs, train_probs, train_types)
+        train_imgs, train_probs, train_types = expand_dataset(train_imgs, train_probs, train_types, aug_types)
     if(augment == "All" or augment == "Test"):
-        test_imgs, test_probs, test_types    = expand_dataset(test_imgs, test_probs, test_types)
+        test_imgs, test_probs, test_types    = expand_dataset(test_imgs, test_probs, test_types, aug_types)
 
     if(channels == 3):
         images = make_3_channel(images)
@@ -198,19 +199,69 @@ def remove_wire(img, height, width, wire_removal, offset):
 #.7
 
 @timefunc
-def expand_dataset(imgs, probs, types):                                                                                 #augmentation
+def expand_dataset(imgs, probs, types, aug_types):                                                                      #augmentation    
     orig_size = imgs.shape[0]
 
-    imgs = imgs.repeat(4, axis=0)
-    probs  = probs.repeat(4, axis=0)
-    types  = types.repeat(4, axis=0)
+    end_size = 1
+    end_size *= 4 if ("Flip" in aug_types) else 1
+    end_size *= 7 if ("Rot"  in aug_types) else 1
+    end_size *= 3 if ("Bright"  in aug_types) else 1
 
-    for i in range(0, orig_size):
-        i_tmp = 4*i
-        imgs[i_tmp + 1] = np.flip(imgs[i_tmp], 0)                                                   #vertical flip
-        imgs[i_tmp + 2] = np.flip(imgs[i_tmp + 1], 1)                                               #vertical and horizontal flip
-        imgs[i_tmp + 3] = np.flip(imgs[i_tmp], 1)                                                   #horizontal flip
+    imgs = imgs.repeat(end_size, axis=0)
+    probs  = probs.repeat(end_size, axis=0)
+    types  = types.repeat(end_size, axis=0)
 
+    if("Flip" in aug_types):
+        step = int(end_size/4)
+        for i in range(0, orig_size):
+            i_tmp = end_size*i
+            imgs[i_tmp +   step] = np.flip(imgs[i_tmp], 0)                                               #vertical flip
+            imgs[i_tmp + 2*step] = np.flip(imgs[i_tmp + 1], 1)                                           #vertical and horizontal flip
+            imgs[i_tmp + 3*step] = np.flip(imgs[i_tmp], 1)                                               #horizontal flip
+        end_size = int(end_size/4)
+    
+    if("Rot"  in aug_types):
+        step = int(end_size/7)
+        image_center = tuple(np.array(imgs[0].shape[1::-1]) / 2)
+        for i in range(0, orig_size*4):
+            i_tmp = end_size*i
+            rot_mat = cv.getRotationMatrix2D(image_center, 1, 1.0)
+            imgs[i_tmp +   step] = cv.warpAffine(imgs[i_tmp], rot_mat, imgs[i_tmp].shape[1::-1], flags=cv.INTER_LINEAR)
+            rot_mat = cv.getRotationMatrix2D(image_center,-1, 1.0)
+            imgs[i_tmp + 2*step] = cv.warpAffine(imgs[i_tmp], rot_mat, imgs[i_tmp].shape[1::-1], flags=cv.INTER_LINEAR)
+            rot_mat = cv.getRotationMatrix2D(image_center, 2, 1.0)
+            imgs[i_tmp + 3*step] = cv.warpAffine(imgs[i_tmp], rot_mat, imgs[i_tmp].shape[1::-1], flags=cv.INTER_LINEAR)
+            rot_mat = cv.getRotationMatrix2D(image_center,-2, 1.0)
+            imgs[i_tmp + 4*step] = cv.warpAffine(imgs[i_tmp], rot_mat, imgs[i_tmp].shape[1::-1], flags=cv.INTER_LINEAR)
+            rot_mat = cv.getRotationMatrix2D(image_center, 3, 1.0)
+            imgs[i_tmp + 5*step] = cv.warpAffine(imgs[i_tmp], rot_mat, imgs[i_tmp].shape[1::-1], flags=cv.INTER_LINEAR)
+            rot_mat = cv.getRotationMatrix2D(image_center,-3, 1.0)
+            imgs[i_tmp + 6*step] = cv.warpAffine(imgs[i_tmp], rot_mat, imgs[i_tmp].shape[1::-1], flags=cv.INTER_LINEAR)
+        end_size = int(end_size/7)
+
+    if("Bright"  in aug_types):
+        step = 1
+        image_center = tuple(np.array(imgs[0].shape[1::-1]) / 2)
+        for i in range(0, orig_size*4):
+            i_tmp = end_size*i
+            imgs[i_tmp + 1*step] = np.clip(imgs[i_tmp] + 0.1, 0, 1)
+            imgs[i_tmp + 2*step] = np.clip(imgs[i_tmp] - 0.1, 0, 1)
+
+    plt.subplot(2,4,1)
+    plt.imshow(imgs[0], cmap='gray')
+    plt.subplot(2,4,3)
+    plt.imshow(imgs[1], cmap='gray')
+    plt.subplot(2,4,4)
+    plt.imshow(imgs[2], cmap='gray')
+    plt.subplot(2,4,5)
+    plt.imshow(imgs[3], cmap='gray')
+    plt.subplot(2,4,6)
+    plt.imshow(imgs[4], cmap='gray')
+    plt.subplot(2,4,7)
+    plt.imshow(imgs[5], cmap='gray')
+    plt.subplot(2,4,8)
+    plt.imshow(imgs[6], cmap='gray')
+    plt.show()
     return imgs, probs, types
     
 @timefunc
