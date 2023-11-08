@@ -23,8 +23,6 @@ def load_and_preprocess_dataset():
     images = remove_cell_wires(images)
     images = np.float32(images)
 
-    images = make_3_channel(images)
-
     train_m_imgs, test_m_imgs, train_m_probs, test_m_probs, \
             train_p_imgs, test_p_imgs, train_p_probs, test_p_probs =\
             split_sets(images, probs, types)
@@ -185,4 +183,4 @@ def shuffle_set(train_imgs, train_probs, train_types, test_imgs, test_probs, tes
     return train_imgs, train_probs, train_types, test_imgs, test_probs, test_types
 
 
-load_and_preprocess_dataset()
+#load_and_preprocess_dataset()
