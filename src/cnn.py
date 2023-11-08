@@ -44,7 +44,7 @@ def train_model(model, X_train, y_train, path, optimizer = "adam", batch_size = 
     y_train = label_encoder.fit_transform(y_train)
     y_train = keras.utils.to_categorical(y_train)
 
-    if (len(X_train.shape) == 4 and X_train.shape[3] == 1):
+    if (len(X_train.shape) == 3 or X_train.shape[3] == 1):
         X_train = Dataloader.make_3_channel(X_train)
     
     model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=['accuracy'])
