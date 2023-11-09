@@ -14,7 +14,8 @@ from pyBench import timefunc
 
 @timefunc
 def load_and_preprocess_dataset(out_probs=[0,1,2,3], simple_probs=False, out_types="All", 
-                                wire_removal="Crop", channels=1, augment="All", aug_types=["Flip", "Rot", "Bright"]):
+                                wire_removal="Crop", crop_pix=10, channels=1, augment="All", aug_types=["Flip", "Rot", "Bright"],
+                                shuffle=True):
     """
     :param out_probs: [0 = undamaged, 1 = mild, 2 = major, 3 = destroyed]
     :param simple_probs: true = set all probs > 0 to 1 (any damage = 1)
@@ -41,7 +42,7 @@ def load_and_preprocess_dataset(out_probs=[0,1,2,3], simple_probs=False, out_typ
     images = contrast_stretch(images)
     
     
-    images = remove_cell_wires(images, wire_removal)
+    images = remove_cell_wires(images, wire_removal, crop_pix)
     images = np.float32(images)
 
     train_imgs, train_probs, train_types, test_imgs, test_probs, test_types =\
@@ -61,8 +62,9 @@ def load_and_preprocess_dataset(out_probs=[0,1,2,3], simple_probs=False, out_typ
     if(augment == "All" or augment == "Test"):
         test_imgs, test_probs, test_types    = expand_dataset(test_imgs, test_probs, test_types, aug_types)
 
-    train_imgs, train_probs, train_types, test_imgs, test_probs, test_types =\
-            shuffle_set(train_imgs, train_probs, train_types, test_imgs, test_probs, test_types)
+    if(shuffle):
+        train_imgs, train_probs, train_types, test_imgs, test_probs, test_types =\
+                shuffle_set(train_imgs, train_probs, train_types, test_imgs, test_probs, test_types)
 
     print(len(train_probs[train_probs == 0]), \
             len(train_probs[train_probs == 0.3333333333333333]), \
@@ -135,8 +137,7 @@ def calc_contrast_stretch(img, min_pix_val_in, max_pix_val_in):
     return img_out
 
 @timefunc
-def remove_cell_wires(imgs, wire_removal):     
-    crop = 10
+def remove_cell_wires(imgs, wire_removal, crop_pix):     
     if (wire_removal == "Crop"):
         end_size = [240,250]
     else:
@@ -153,13 +154,13 @@ def remove_cell_wires(imgs, wire_removal):
             img_tmp = remove_wire(imgs[i], height_a, width_a, wire_removal, 0)
             img_tmp = remove_wire(img_tmp, height_c, width_c, wire_removal, width_a)
             img_tmp = remove_wire(img_tmp, height_e, width_e, wire_removal, width_a + width_c)
-            imgs_tmp[i] = cv.resize(img_tmp, (end_size[0]+2*crop,end_size[1]+2*crop)\
-                                    )[crop:end_size[0]+crop, crop:end_size[1]+crop]
+            imgs_tmp[i] = cv.resize(img_tmp, (end_size[1]+2*crop_pix,end_size[0]+2*crop_pix)\
+                                    )[crop_pix:(end_size[0]+crop_pix), crop_pix:(end_size[1]+crop_pix)]
         else:
             img_tmp = remove_wire(imgs[i], height_b, width_b, wire_removal, 0)
             img_tmp = remove_wire(img_tmp, height_d, width_d, wire_removal, width_b)
-            imgs_tmp[i] = cv.resize(img_tmp, (end_size[0]+2*crop,end_size[1]+2*crop)\
-                                    )[crop:end_size[0]+crop, crop:end_size[1]+crop]
+            imgs_tmp[i] = cv.resize(img_tmp, (end_size[1]+2*crop_pix,end_size[0]+2*crop_pix)\
+                                    )[crop_pix:end_size[0]+crop_pix, crop_pix:end_size[1]+crop_pix]
     return imgs_tmp
 
 def find_wire(img, start_height):
@@ -183,7 +184,7 @@ def find_wire(img, start_height):
         cur_score = img[i].std() * img[i].mean()
         if(cur_score < score or score < 0):
             score = cur_score
-    return score, mid_point, bottom_point - top_point + 1
+    return score, mid_point, bottom_point - top_point + 9
 
 def remove_wire(img, height, width, wire_removal, offset):
     if(wire_removal == "Crop"):
