@@ -1,12 +1,8 @@
-# from elpv.utils.elpv_reader import load_dataset
 import numpy as np
 
 from tensorflow import keras
 from sklearn.preprocessing import LabelEncoder
-# from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
 
-
-import cv2 as cv
 import matplotlib.pyplot as plt
 
 def initialize_model(version = "vgg19"):
@@ -23,7 +19,7 @@ def initialize_model(version = "vgg19"):
         return type_model
  
     elif version == "vgg19":
-        vgg19_base = keras.applications.VGG19(weights='imagenet', include_top=False, input_shape=(300,300,3))
+        vgg19_base = keras.applications.VGG19(weights='imagenet', include_top=False, input_shape=(240, 250, 3))
         vgg19_base.trainable = False
 
         vgg19_model = keras.models.Sequential([
@@ -36,17 +32,32 @@ def initialize_model(version = "vgg19"):
         ])
 
         return vgg19_model
+    
+    elif version == "dumbass":
+        dumbass_model = keras.models.Sequential()
+        dumbass_model.add(keras.layers.Conv2D(64, (3, 3), activation='relu', input_shape=(240, 250, 3)))
+        dumbass_model.add(keras.layers.MaxPooling2D((2, 2)))
+        dumbass_model.add(keras.layers.Conv2D(32, (3, 3), activation='relu'))
+        dumbass_model.add(keras.layers.MaxPooling2D((2, 2)))
+        dumbass_model.add(keras.layers.Flatten())
+        dumbass_model.add(keras.layers.Dense(64, activation='relu'))
+        dumbass_model.add(keras.layers.Dense(4, activation = "softmax"))
+
+        return dumbass_model
+    
+def onehot_encode(y):
+    label_encoder = LabelEncoder()
+    y = label_encoder.fit_transform(y)
+    y = keras.utils.to_categorical(y)
+
+    return y
 
 #for initial dense layer training
 def train_model(model, X_train, y_train, path, optimizer = "adam", batch_size = 16, epochs = 100, validation_split = 0.2):
-    label_encoder = LabelEncoder()
-    y_train = label_encoder.fit_transform(y_train)
-    y_train = keras.utils.to_categorical(y_train)
-
-    
+       
     model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=['accuracy'])
     history = model.fit(X_train, y_train, epochs = epochs, validation_split = validation_split, batch_size = batch_size)
-    model.save(path)
+    # model.save(path)
     return history
 
 def finetune_model(model, X_train, y_train, path, optimizer = "adam", batch_size = 16, epochs = 100, validation_split = 0.2, iterations = 1, unfreeze_loop = 2):
@@ -78,3 +89,8 @@ def plot_accuracy(history):
     plt.ylim([0.5, 1])
     plt.legend(loc='lower right')
     plt.show()
+
+def evaluate_metrics(model, X_test, y_test):
+    score = model.evaluate(X_test, y_test, verbose=0)
+    print("Test loss:", score[0])
+    print("Test accuracy:", score[1])
