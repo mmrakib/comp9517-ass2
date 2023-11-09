@@ -71,7 +71,7 @@ def plot_accuracy(history):
 
 import Dataloader
 train_imgs, train_probs, train_types, test_imgs, test_probs, test_types = \
-        Dataloader.load_and_preprocess_dataset(out_types="All", simple_probs=False, wire_removal="Crop", augment="All", channels=3, aug_types=["Flip"])
+        Dataloader.load_and_preprocess_dataset(out_types="All", simple_probs=False, wire_removal="Crop", augment="All", aug_types=["Bright"])
 
 
 model = initialize_model()
