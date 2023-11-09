@@ -71,93 +71,20 @@ def plot_accuracy(history):
 
 import Dataloader
 train_imgs, train_probs, train_types, test_imgs, test_probs, test_types = \
-        Dataloader.load_and_preprocess_dataset(out_types="All", simple_probs=False, wire_removal="Crop", augment="All", aug_types=["Rot", "Bright"])
+        Dataloader.load_and_preprocess_dataset(out_types="All", simple_probs=False, wire_removal="Crop", augment="All", channels=3, aug_types=["Flip"])
 
-train_types_n = (train_types == "mono")
 
-model50 = initialize_model()
-model75 = initialize_model()
-model100 = initialize_model()
-model200 = initialize_model()
-model300 = initialize_model()
-model500 = initialize_model()
-model650 = initialize_model()
-model800 = initialize_model()
-model1000 = initialize_model()
-history = train_model(model50, train_imgs, train_probs, epochs=50, batch_size=10000)
-history = train_model(model75, train_imgs, train_probs, epochs=75, batch_size=10000)
-history = train_model(model100, train_imgs, train_probs, epochs=100, batch_size=10000)
-history = train_model(model200, train_imgs, train_probs, epochs=200, batch_size=10000)
-history = train_model(model300, train_imgs, train_probs, epochs=300, batch_size=10000)
-history = train_model(model500, train_imgs, train_probs, epochs=500, batch_size=10000)
-history = train_model(model650, train_imgs, train_probs, epochs=650, batch_size=10000)
-history = train_model(model800, train_imgs, train_probs, epochs=800, batch_size=10000)
-history = train_model(model1000, train_imgs, train_probs, epochs=1000, batch_size=10000)
+model = initialize_model()
+history = train_model(model, train_imgs, train_probs, epochs=300, batch_size=10000)
 #plot_loss(history)
 #plot_accuracy(history)
 
 
 #Predict
-y_true, y_prediction = predict(model50, test_imgs, test_probs)
+y_true, y_prediction = predict(model, test_imgs, test_probs)
 print("train |",
     " Accuracy:",   round(sk_met.accuracy_score( y_true, y_prediction),5),
     " Precision:",  round(sk_met.precision_score(y_true, y_prediction, average='macro'),5),
     " Recall:",     round(sk_met.recall_score(   y_true, y_prediction, average='macro'),5),
     " F1:",         round(sk_met.f1_score(       y_true, y_prediction, average='macro'),5))
-#Predict
-y_true, y_prediction = predict(model75, test_imgs, test_probs)
-print("train |",
-    " Accuracy:",   round(sk_met.accuracy_score( y_true, y_prediction),5),
-    " Precision:",  round(sk_met.precision_score(y_true, y_prediction, average='macro'),5),
-    " Recall:",     round(sk_met.recall_score(   y_true, y_prediction, average='macro'),5),
-    " F1:",         round(sk_met.f1_score(       y_true, y_prediction, average='macro'),5))
-#Predict
-y_true, y_prediction = predict(model100, test_imgs, test_probs)
-print("train |",
-    " Accuracy:",   round(sk_met.accuracy_score( y_true, y_prediction),5),
-    " Precision:",  round(sk_met.precision_score(y_true, y_prediction, average='macro'),5),
-    " Recall:",     round(sk_met.recall_score(   y_true, y_prediction, average='macro'),5),
-    " F1:",         round(sk_met.f1_score(       y_true, y_prediction, average='macro'),5))
-#Predict
-y_true, y_prediction = predict(model200, test_imgs, test_probs)
-print("train |",
-    " Accuracy:",   round(sk_met.accuracy_score( y_true, y_prediction),5),
-    " Precision:",  round(sk_met.precision_score(y_true, y_prediction, average='macro'),5),
-    " Recall:",     round(sk_met.recall_score(   y_true, y_prediction, average='macro'),5),
-    " F1:",         round(sk_met.f1_score(       y_true, y_prediction, average='macro'),5))
-#Predict
-y_true, y_prediction = predict(model300, test_imgs, test_probs)
-print("train |",
-    " Accuracy:",   round(sk_met.accuracy_score( y_true, y_prediction),5),
-    " Precision:",  round(sk_met.precision_score(y_true, y_prediction, average='macro'),5),
-    " Recall:",     round(sk_met.recall_score(   y_true, y_prediction, average='macro'),5),
-    " F1:",         round(sk_met.f1_score(       y_true, y_prediction, average='macro'),5))
-#Predict
-y_true, y_prediction = predict(model500, test_imgs, test_probs)
-print("train |",
-    " Accuracy:",   round(sk_met.accuracy_score( y_true, y_prediction),5),
-    " Precision:",  round(sk_met.precision_score(y_true, y_prediction, average='macro'),5),
-    " Recall:",     round(sk_met.recall_score(   y_true, y_prediction, average='macro'),5),
-    " F1:",         round(sk_met.f1_score(       y_true, y_prediction, average='macro'),5))
-#Predict
-y_true, y_prediction = predict(model650, test_imgs, test_probs)
-print("train |",
-    " Accuracy:",   round(sk_met.accuracy_score( y_true, y_prediction),5),
-    " Precision:",  round(sk_met.precision_score(y_true, y_prediction, average='macro'),5),
-    " Recall:",     round(sk_met.recall_score(   y_true, y_prediction, average='macro'),5),
-    " F1:",         round(sk_met.f1_score(       y_true, y_prediction, average='macro'),5))
-#Predict
-y_true, y_prediction = predict(model800, test_imgs, test_probs)
-print("train |",
-    " Accuracy:",   round(sk_met.accuracy_score( y_true, y_prediction),5),
-    " Precision:",  round(sk_met.precision_score(y_true, y_prediction, average='macro'),5),
-    " Recall:",     round(sk_met.recall_score(   y_true, y_prediction, average='macro'),5),
-    " F1:",         round(sk_met.f1_score(       y_true, y_prediction, average='macro'),5))
-#Predict
-y_true, y_prediction = predict(model1000, test_imgs, test_probs)
-print("train |",
-    " Accuracy:",   round(sk_met.accuracy_score( y_true, y_prediction),5),
-    " Precision:",  round(sk_met.precision_score(y_true, y_prediction, average='macro'),5),
-    " Recall:",     round(sk_met.recall_score(   y_true, y_prediction, average='macro'),5),
-    " F1:",         round(sk_met.f1_score(       y_true, y_prediction, average='macro'),5))
-#sk_met.ConfusionMatrixDisplay(sk_met.confusion_matrix(y_true, y_prediction)).plot()
+sk_met.ConfusionMatrixDisplay(sk_met.confusion_matrix(y_true, y_prediction)).plot()

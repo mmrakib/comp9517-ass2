@@ -47,8 +47,6 @@ def load_and_preprocess_dataset(out_probs=[0,1,2,3], simple_probs=False, out_typ
     #plt.imshow(images[0])
     #plt.show()
 
-    if(channels == 3):
-        images = make_3_channel(images)
 
     train_imgs, train_probs, train_types, test_imgs, test_probs, test_types =\
             split_t_t_data(images, probs, types, out_types)
@@ -79,8 +77,11 @@ def load_and_preprocess_dataset(out_probs=[0,1,2,3], simple_probs=False, out_typ
             len(test_probs[test_probs == 0.3333333333333333]), \
             len(test_probs[test_probs == 0.6666666666666666]), \
             len(test_probs[test_probs == 1]))
-        
 
+    if(channels == 3):
+        train_imgs = make_3_channel(train_imgs)
+        test_imgs = make_3_channel(test_imgs)
+        
     return train_imgs, train_probs, train_types, test_imgs, test_probs, test_types
 
 @timefunc
