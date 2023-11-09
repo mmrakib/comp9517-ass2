@@ -37,7 +37,7 @@ def initialize_model(version = "vgg19"):
 
         return vgg19_model
 
-
+#for initial dense layer training
 def train_model(model, X_train, y_train, path, optimizer = "adam", batch_size = 16, epochs = 100, validation_split = 0.2):
     label_encoder = LabelEncoder()
     y_train = label_encoder.fit_transform(y_train)
@@ -46,6 +46,18 @@ def train_model(model, X_train, y_train, path, optimizer = "adam", batch_size = 
     
     model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=['accuracy'])
     history = model.fit(X_train, y_train, epochs = epochs, validation_split = validation_split, batch_size = batch_size)
+    model.save(path)
+    return history
+
+def finetune_model(model, X_train, y_train, path, optimizer = "adam", batch_size = 16, epochs = 100, validation_split = 0.2, iterations = 1, unfreeze_loop = 2):
+
+    for i in range(iterations):
+        for layer in model.layers[-(unfreeze_loop * (1 + 1)):]:
+            layer.trainable = True
+
+        model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=['accuracy'])
+        history = model.fit(X_train, y_train, epochs = epochs, validation_split = validation_split, batch_size = batch_size)
+    
     model.save(path)
     return history
 
