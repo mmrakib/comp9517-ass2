@@ -45,3 +45,4 @@ wrapt==1.14.1
 pillow
 matplotlib
 scikit-learn
+scikit-image

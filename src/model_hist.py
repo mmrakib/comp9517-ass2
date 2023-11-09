@@ -28,7 +28,7 @@ def train_model(model, x_train, y_train, optimizer="adam", batch_size = 16, epoc
     for i in range(0,x_train.shape[0]):
         x_train_h[i] = cv.calcHist(x_train[i],[0],None,[256],[0,1]).reshape([256])
 
-    cv.normalize(x_train_h, x_train_h, alpha=0, beta=256, norm_type=cv.NORM_MINMAX)
+    #cv.normalize(x_train_h, x_train_h, alpha=0, beta=256, norm_type=cv.NORM_MINMAX)
 
     model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=['accuracy'])
     history = model.fit(x_train_h, y_train, epochs = epochs, validation_split = validation_split, 
@@ -88,3 +88,4 @@ print("train |",
     " Recall:",     round(sk_met.recall_score(   y_true, y_prediction, average='macro'),5),
     " F1:",         round(sk_met.f1_score(       y_true, y_prediction, average='macro'),5))
 sk_met.ConfusionMatrixDisplay(sk_met.confusion_matrix(y_true, y_prediction)).plot()
+plt.show()
