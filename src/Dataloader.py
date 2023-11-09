@@ -47,6 +47,9 @@ def load_and_preprocess_dataset(out_probs=[0,1,2,3], simple_probs=False, out_typ
     #plt.imshow(images[0])
     #plt.show()
 
+    if(channels == 3):
+        images = make_3_channel(images)
+
     train_imgs, train_probs, train_types, test_imgs, test_probs, test_types =\
             split_t_t_data(images, probs, types, out_types)
 
@@ -64,9 +67,6 @@ def load_and_preprocess_dataset(out_probs=[0,1,2,3], simple_probs=False, out_typ
         train_imgs, train_probs, train_types = expand_dataset(train_imgs, train_probs, train_types, aug_types)
     if(augment == "All" or augment == "Test"):
         test_imgs, test_probs, test_types    = expand_dataset(test_imgs, test_probs, test_types, aug_types)
-
-    if(channels == 3):
-        images = make_3_channel(images)
 
     train_imgs, train_probs, train_types, test_imgs, test_probs, test_types =\
             shuffle_set(train_imgs, train_probs, train_types, test_imgs, test_probs, test_types)
@@ -213,7 +213,7 @@ def expand_dataset(imgs, probs, types, aug_types):                              
 
     if("Flip" in aug_types):
         step = int(end_size/4)
-        for i in range(0, orig_size):
+        for i in range(0, int(end_size/4)):
             i_tmp = end_size*i
             imgs[i_tmp +   step] = np.flip(imgs[i_tmp], 0)                                               #vertical flip
             imgs[i_tmp + 2*step] = np.flip(imgs[i_tmp + 1], 1)                                           #vertical and horizontal flip
@@ -223,7 +223,7 @@ def expand_dataset(imgs, probs, types, aug_types):                              
     if("Rot"  in aug_types):
         step = int(end_size/7)
         image_center = tuple(np.array(imgs[0].shape[1::-1]) / 2)
-        for i in range(0, orig_size*4):
+        for i in range(0, orig_size*int(end_size/7)):
             i_tmp = end_size*i
             rot_mat = cv.getRotationMatrix2D(image_center, 1, 1.0)
             imgs[i_tmp +   step] = cv.warpAffine(imgs[i_tmp], rot_mat, imgs[i_tmp].shape[1::-1], flags=cv.INTER_LINEAR)
@@ -242,26 +242,11 @@ def expand_dataset(imgs, probs, types, aug_types):                              
     if("Bright"  in aug_types):
         step = 1
         image_center = tuple(np.array(imgs[0].shape[1::-1]) / 2)
-        for i in range(0, orig_size*4):
+        for i in range(0, orig_size*int(end_size/3)):
             i_tmp = end_size*i
             imgs[i_tmp + 1*step] = np.clip(imgs[i_tmp] + 0.1, 0, 1)
             imgs[i_tmp + 2*step] = np.clip(imgs[i_tmp] - 0.1, 0, 1)
 
-    plt.subplot(2,4,1)
-    plt.imshow(imgs[0], cmap='gray')
-    plt.subplot(2,4,3)
-    plt.imshow(imgs[1], cmap='gray')
-    plt.subplot(2,4,4)
-    plt.imshow(imgs[2], cmap='gray')
-    plt.subplot(2,4,5)
-    plt.imshow(imgs[3], cmap='gray')
-    plt.subplot(2,4,6)
-    plt.imshow(imgs[4], cmap='gray')
-    plt.subplot(2,4,7)
-    plt.imshow(imgs[5], cmap='gray')
-    plt.subplot(2,4,8)
-    plt.imshow(imgs[6], cmap='gray')
-    plt.show()
     return imgs, probs, types
     
 @timefunc
