@@ -14,7 +14,7 @@ from pyBench import timefunc
 
 @timefunc
 def load_and_preprocess_dataset(out_probs=[0,1,2,3], simple_probs=False, out_types="All", 
-                                wire_removal="Crop", crop_pix=10, channels=1, augment="All", aug_types=["Flip", "Rot", "Bright"],
+                                wire_removal="Crop", crop_pix=10, channels=1, augment="All", aug_types=[],
                                 shuffle=True):
     """
     :param out_probs: [0 = undamaged, 1 = mild, 2 = major, 3 = destroyed]
