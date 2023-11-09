@@ -39,7 +39,7 @@ def train_model(model, x_train, y_train, optimizer="adam", batch_size = 16, epoc
             images = filter_images(x_train[j:j+1], i/12)
             img_tmp += images[0]
         img_tmp = np.clip(img_tmp, 0, 1)
-        img_tmp=cv.morphologyEx(img_tmp,cv.MORPH_OPEN,np.ones((3,3)))
+        img_tmp=cv.morphologyEx(img_tmp,cv.MORPH_OPEN,np.ones((4,4)))
         plt.subplot(4,6,2*j+1)
         plt.imshow(x_train[j], cmap='grey')
         plt.subplot(4,6,2*j+2)
