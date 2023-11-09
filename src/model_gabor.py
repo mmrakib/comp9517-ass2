@@ -46,10 +46,7 @@ def train_model(model, x_train, y_train, optimizer="adam", batch_size = 16, epoc
         plt.imshow(img_tmp, cmap='grey')
     plt.show()
 
-    #model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=['accuracy'])
-    #history = model.fit(x_train_g, y_train, epochs = epochs, validation_split = validation_split, 
-    #                    batch_size = batch_size)
-    #model.save(path)
+    
     return history
 
 def predict(model, x_test, y_true):

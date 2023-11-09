@@ -15,14 +15,21 @@ from pyBench import timefunc
 @timefunc
 def load_and_preprocess_dataset(out_probs=[0,1,2,3], simple_probs=False, out_types="All", 
                                 wire_removal="Crop", crop_pix=10, channels=1, augment="All", aug_types=[],
-                                shuffle=True):
+                                shuffle=True, c_stretch=False, flatten_blacks=0):
     """
     :param out_probs: [0 = undamaged, 1 = mild, 2 = major, 3 = destroyed]
     :param simple_probs: true = set all probs > 0 to 1 (any damage = 1)
     :param out_types: All, Mono, Poly (only return matching)
     :param wire_removal: Crop, Gray 
+    :param crop_pix: how many pixels to crop off each edge to remove borders
     :param channels: 1 keep as 1 channel, 3 convert images to 3 channel
     :param augment: All, Train, Test (which data to augment)
+    :param aug_types: ["Flip" = invert across h, v and diag planes 4x, 
+                        "Rot" = rotate by 1,2, and 3 deg in either direction 7x, 
+                        "Bright" = increase and decrease brightness by 10% 3x]
+    :param shuffle: shuffle both test and train datasets before returning (use for testing preprocessing methods)
+    :param c_stretch: should the images be contrast stretched to normalise and enhance features
+    :param flatten_blacks: clips the darkest n% of pixels to pure black
     """
     images, probs, types = load_dataset()
     images = images.astype("float32") / 255
@@ -39,7 +46,8 @@ def load_and_preprocess_dataset(out_probs=[0,1,2,3], simple_probs=False, out_typ
             len(probs[probs == 0.6666666666666666]), \
             len(probs[probs == 1]))
 
-    images = contrast_stretch(images)
+    if c_stretch:
+        images = contrast_stretch(images, flatten_blacks)
     
     
     images = remove_cell_wires(images, wire_removal, crop_pix)
@@ -116,9 +124,9 @@ def reduce_dataset(out_probs, simple_probs, out_types, images, probs, types):
 
 
 @timefunc
-def contrast_stretch(imgs):                                                                                             #contrast stretching
+def contrast_stretch(imgs, flatten_blacks):                                                                                             #contrast stretching
     for i in range(0, imgs.shape[0]):                              
-        imgs[i] = calc_contrast_stretch(imgs[i], imgs[i].min()+0.1, imgs[i].max())
+        imgs[i] = calc_contrast_stretch(imgs[i], imgs[i].min()+flatten_blacks, imgs[i].max())
 
     return imgs
 
@@ -190,8 +198,9 @@ def remove_wire(img, height, width, wire_removal, offset):
     if(wire_removal == "Crop"):
         height -= offset
         return np.delete(img, np.s_[height - math.floor(width/2):math.ceil(height + width/2)], 0)
-    img[height - math.floor(width/2):math.ceil(height + width/2)] = \
-        np.full([width, img.shape[1]], 0.78)
+    elif(wire_removal == "Grey" or wire_removal == "Gray"):
+        img[height - math.floor(width/2):math.ceil(height + width/2)] = \
+            np.full([width, img.shape[1]], 0.78)
     return img
 #.7
 
@@ -257,13 +266,13 @@ def make_3_channel(imgs):
 def split_t_t_data(imgs, probs, types, out_types):
     if(out_types == "All" or out_types == "Mono"):
         train_m_imgs, test_m_imgs, train_m_probs, test_m_probs = \
-            train_test_split(imgs[types == "mono"], probs[types == "mono"], test_size=0.25, random_state=0, shuffle=False)
+            train_test_split(imgs[types == "mono"], probs[types == "mono"], test_size=0.25, random_state=50, shuffle=False)
         if(out_types == "Mono"):           
             return  train_m_imgs, train_m_probs, np.full([train_m_probs.shape[0],4], "poly"), test_m_imgs, test_m_probs, np.full([test_m_probs.shape[0],4], "poly")
 
     if(out_types == "All" or out_types == "Poly"):
         train_p_imgs, test_p_imgs, train_p_probs, test_p_probs = \
-                train_test_split(imgs[types == "poly"], probs[types == "poly"], test_size=0.25, random_state=0, shuffle=False)
+                train_test_split(imgs[types == "poly"], probs[types == "poly"], test_size=0.25, random_state=50, shuffle=False)
         if(out_types == "Poly"):
             return  train_p_imgs, train_p_probs, np.full([train_p_probs.shape[0],4], "poly"), test_p_imgs, test_p_probs, np.full([test_p_probs.shape[0],4], "poly")
 

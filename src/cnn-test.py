@@ -8,7 +8,7 @@ test_probs = cnn.onehot_encode(test_probs)
 
 dumbass_model = cnn.initialize_model("dumbass")
 
-history = cnn.train_model(dumbass_model, train_imgs, train_probs, path = "", epochs = 5)
+history = cnn.train_model(dumbass_model, train_imgs, train_probs, path = "", epochs = 10)
 cnn.plot_loss(history)
 cnn.plot_accuracy(history)
 

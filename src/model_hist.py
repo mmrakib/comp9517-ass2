@@ -73,18 +73,10 @@ import Dataloader
 from elpv.utils.elpv_reader import load_dataset
 from sklearn.model_selection import train_test_split
 train_imgs, train_probs, train_types, test_imgs, test_probs, test_types = \
-        Dataloader.load_and_preprocess_dataset(out_types="All", simple_probs=False, wire_removal="Crop", augment="None", aug_types=["Bright"])
-#images, probs, types = load_dataset()
-#images = images.astype("float32") / 255
-#
-#probs_oh = probs
-#
-#images_3 = np.dstack([images] * 3)
-#images_3 = np.reshape(images_3, (-1, 300, 300, 3))
-#train_imgs, test_imgs, train_probs, test_probs  = train_test_split(images_3, probs_oh, test_size=0.25, random_state=50)
+        Dataloader.load_and_preprocess_dataset(out_types="Mono", simple_probs=False, wire_removal="Crop", augment="None", aug_types=["Bright"])
 
 model = initialize_model()
-history = train_model(model, train_imgs, train_probs, epochs=300, batch_size=10000)
+history = train_model(model, train_imgs, train_probs, epochs=100, batch_size=10000)
 #plot_loss(history)
 #plot_accuracy(history)
 
