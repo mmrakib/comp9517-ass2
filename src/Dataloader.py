@@ -145,7 +145,7 @@ def calc_contrast_stretch(img, min_pix_val_in, max_pix_val_in):
     return img_out
 
 @timefunc
-def remove_cell_wires(imgs, wire_removal, crop_pix):     
+def remove_cell_wires(imgs, wire_removal, crop_pix):   
     if (wire_removal == "Crop"):
         end_size = [240,250]
     else:
@@ -158,6 +158,9 @@ def remove_cell_wires(imgs, wire_removal, crop_pix):
         score_c,height_c,width_c = find_wire(imgs[i], 150)
         score_d,height_d,width_d = find_wire(imgs[i], 225)
         score_e,height_e,width_e = find_wire(imgs[i], 250)
+        if i == 1256:
+            a=1
+
         if((score_a+score_c+score_e)/3 < (score_b+score_d)/2):
             img_tmp = remove_wire(imgs[i], height_a, width_a, wire_removal, 0)
             img_tmp = remove_wire(img_tmp, height_c, width_c, wire_removal, width_a)
@@ -172,26 +175,28 @@ def remove_cell_wires(imgs, wire_removal, crop_pix):
     return imgs_tmp
 
 def find_wire(img, start_height):
-    test_score = img[start_height].std() * img[start_height].mean()
+    test_score = img[start_height].std() + img[start_height].mean()
     if(test_score > 0.1):
         return test_score, start_height, 16
 
-    for i in range(start_height, start_height-10, -1):
+    for i in range(start_height, start_height-8, -1):
         top_point = i
-        top_point_score = img[top_point].std() * img[top_point].mean()
+        top_point_score = img[top_point].std() + img[top_point].mean()
         if(top_point_score > 0.12):
             break
     for i in range(start_height, start_height+15):
         bottom_point = i
-        bottom_point_score = img[bottom_point].std() * img[bottom_point].mean()
+        bottom_point_score = img[bottom_point].std() + img[bottom_point].mean()
         if (bottom_point_score > top_point_score):
             break
     mid_point = int(round((top_point+bottom_point)/2, 0))
     score = -1
     for i in range(mid_point-3, mid_point+3):
-        cur_score = img[i].std() * img[i].mean()
+        cur_score = (img[i].std() + img[i].mean() + 2)**2 - 4
         if(cur_score < score or score < 0):
             score = cur_score
+            score_m = img[i].mean()
+            score_s = img[i].std()
     return score, mid_point, bottom_point - top_point + 9
 
 def remove_wire(img, height, width, wire_removal, offset):
@@ -308,4 +313,4 @@ def shuffle_set(train_imgs, train_probs, train_types, test_imgs, test_probs, tes
     return train_imgs, train_probs, train_types, test_imgs, test_probs, test_types
 
 
-#load_and_preprocess_dataset()
+load_and_preprocess_dataset()
