@@ -77,7 +77,7 @@ def load_and_preprocess_dataset(out_probs=[0,1,2,3], simple_probs=False, out_typ
 
     if(balance_probs > 0):
         train_imgs, train_probs, train_types =\
-                ballance_prob_nums(train_imgs, train_probs, train_types, balance_probs)
+                balance_prob_nums(train_imgs, train_probs, train_types, balance_probs)
 
     print(len(train_probs[train_probs == 0]), \
             len(train_probs[train_probs == 0.3333333333333333]), \
@@ -318,7 +318,7 @@ def shuffle_set(train_imgs, train_probs, train_types, test_imgs, test_probs, tes
     return train_imgs, train_probs, train_types, test_imgs, test_probs, test_types
 
 @timefunc
-def ballance_prob_nums(imgs, probs, types, balance_probs):
+def balance_prob_nums(imgs, probs, types, balance_probs):
     prb_0 = probs == 0
     prb_1 = probs == 0.3333333333333333
     prb_2 = probs == 0.6666666666666666
@@ -330,10 +330,10 @@ def ballance_prob_nums(imgs, probs, types, balance_probs):
     len_3 = sum(prb_3)
     len_max = min([len_0, len_1, len_2, len_3]) * balance_probs
 
-    prb_0 = run_ballance_prob_nums(prb_0, len_0, len_max)
-    prb_1 = run_ballance_prob_nums(prb_1, len_1, len_max)
-    prb_2 = run_ballance_prob_nums(prb_2, len_2, len_max)
-    prb_3 = run_ballance_prob_nums(prb_3, len_3, len_max)
+    prb_0 = run_balance_prob_nums(prb_0, len_0, len_max)
+    prb_1 = run_balance_prob_nums(prb_1, len_1, len_max)
+    prb_2 = run_balance_prob_nums(prb_2, len_2, len_max)
+    prb_3 = run_balance_prob_nums(prb_3, len_3, len_max)
 
     prb = prb_0+prb_1+prb_2+prb_3
 
@@ -342,7 +342,7 @@ def ballance_prob_nums(imgs, probs, types, balance_probs):
     types = types[prb]
     return imgs, probs, types
 
-def run_ballance_prob_nums(prb, leng, leng_max):
+def run_balance_prob_nums(prb, leng, leng_max):
     for i in range(len(prb)-1, -1, -1):
         if (leng <= leng_max):
             break
