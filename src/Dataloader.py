@@ -78,8 +78,6 @@ def load_and_preprocess_dataset(out_probs=[0,1,2,3], simple_probs=False, out_typ
     if(balance_probs > 0):
         train_imgs, train_probs, train_types =\
                 ballance_prob_nums(train_imgs, train_probs, train_types, balance_probs)
-        test_imgs, test_probs, test_types =\
-                ballance_prob_nums(test_imgs, test_probs, test_types, balance_probs)
 
     print(len(train_probs[train_probs == 0]), \
             len(train_probs[train_probs == 0.3333333333333333]), \
