@@ -33,18 +33,6 @@ def initialize_model(version = "vgg19"):
 
         return vgg19_model
     
-    elif version == "dumbass":
-        dumbass_model = keras.models.Sequential()
-        dumbass_model.add(keras.layers.Conv2D(64, (3, 3), activation='relu', input_shape=(300, 300, 3)))
-        dumbass_model.add(keras.layers.MaxPooling2D((2, 2)))
-        dumbass_model.add(keras.layers.Conv2D(32, (3, 3), activation='relu'))
-        dumbass_model.add(keras.layers.MaxPooling2D((2, 2)))
-        dumbass_model.add(keras.layers.Flatten())
-        dumbass_model.add(keras.layers.Dense(64, activation='relu'))
-        dumbass_model.add(keras.layers.Dense(4, activation = "softmax"))
-
-        return dumbass_model
-    
 def onehot_encode(y):
     label_encoder = LabelEncoder()
     y = label_encoder.fit_transform(y)
