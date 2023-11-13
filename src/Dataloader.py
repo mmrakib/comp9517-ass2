@@ -78,6 +78,8 @@ def load_and_preprocess_dataset(out_probs=[0,1,2,3], simple_probs=False, out_typ
     if(balance_probs > 0):
         train_imgs, train_probs, train_types =\
                 balance_prob_nums(train_imgs, train_probs, train_types, balance_probs)
+        #test_imgs, test_probs, test_types =\
+        #        balance_prob_nums(test_imgs, test_probs, test_types, balance_probs)
 
     print(len(train_probs[train_probs == 0]), \
             len(train_probs[train_probs == 0.3333333333333333]), \
@@ -313,7 +315,7 @@ def shuffle_set(train_imgs, train_probs, train_types, test_imgs, test_probs, tes
     np.random.seed(rand_seed2)
     np.random.shuffle(test_probs)
     np.random.seed(rand_seed2)
-    np.random.shuffle(train_types)
+    np.random.shuffle(test_types)
 
     return train_imgs, train_probs, train_types, test_imgs, test_probs, test_types
 
