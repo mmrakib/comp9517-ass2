@@ -154,7 +154,7 @@ def calc_contrast_stretch(img, min_pix_val_in, max_pix_val_in):
 @timefunc
 def remove_cell_wires(imgs, wire_removal, crop_pix):   
     if (wire_removal == "Crop"):
-        end_size = [240,250]
+        end_size = [240,280]
     else:
         end_size = [280,280]
     imgs_tmp = np.zeros([imgs.shape[0], end_size[0], end_size[1]])
@@ -278,13 +278,21 @@ def make_3_channel(imgs):
 def split_t_t_data(imgs, probs, types, out_types):
     if(out_types == "All" or out_types == "Mono"):
         train_m_imgs, test_m_imgs, train_m_probs, test_m_probs = \
+<<<<<<< HEAD
             train_test_split(imgs[types == "mono"], probs[types == "mono"], test_size=0.25, random_state=50, shuffle=True, stratify=probs)
+=======
+            train_test_split(imgs[types == "mono"], probs[types == "mono"], test_size=0.25, random_state=0, shuffle=False)
+>>>>>>> 7aa5f0a830153c5717c2bc40d29fc2f40d7d06b6
         if(out_types == "Mono"):           
-            return  train_m_imgs, train_m_probs, np.full([train_m_probs.shape[0],4], "poly"), test_m_imgs, test_m_probs, np.full([test_m_probs.shape[0],4], "poly")
+            return  train_m_imgs, train_m_probs, np.full([train_m_probs.shape[0],4], "mono"), test_m_imgs, test_m_probs, np.full([test_m_probs.shape[0],4], "mono")
 
     if(out_types == "All" or out_types == "Poly"):
         train_p_imgs, test_p_imgs, train_p_probs, test_p_probs = \
+<<<<<<< HEAD
                 train_test_split(imgs[types == "poly"], probs[types == "poly"], test_size=0.25, random_state=50, shuffle=True, stratify=probs)
+=======
+                train_test_split(imgs[types == "poly"], probs[types == "poly"], test_size=0.25, random_state=0, shuffle=False)
+>>>>>>> 7aa5f0a830153c5717c2bc40d29fc2f40d7d06b6
         if(out_types == "Poly"):
             return  train_p_imgs, train_p_probs, np.full([train_p_probs.shape[0],4], "poly"), test_p_imgs, test_p_probs, np.full([test_p_probs.shape[0],4], "poly")
 
