@@ -1,7 +1,6 @@
 from src.Dataloader import load_and_preprocess_dataset
 import src.cnn as cnn
 
-
 from elpv.utils.elpv_reader import load_dataset
 import cv2 as cv
 import numpy as np
@@ -24,11 +23,12 @@ train_probs = cnn.onehot_encode(train_probs)
 test_probs = cnn.onehot_encode(test_probs)
 
 
-history = cnn.train_model(vgg19_base, train_imgs, train_probs, path = "", epochs = 10)
+history = cnn.train_model(vgg19_base, train_imgs, train_probs, path = "models/vgg19-mono-base", epochs = 10)
 cnn.plot_loss(history)
 cnn.plot_accuracy(history)
 
+# history = cnn.finetune_model(vgg19_base, train_imgs, train_probs, path = "models/vgg19-mono-ft", epochs = 10)
+# cnn.plot_loss(history)
+# cnn.plot_accuracy(history)
+
 cnn.evaluate_metrics(vgg19_base, test_imgs, test_probs)
-
-
-
