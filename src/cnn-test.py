@@ -16,11 +16,11 @@ for i in range(10):
     test_probs = cnn.onehot_encode(test_probs)
 
 
-    history = cnn.train_model(vgg19, train_imgs, train_probs, filename = "vgg19-mono-base", epochs = 10)
+    history = cnn.train_model(vgg19, train_imgs, train_probs, epochs = 10)
     cnn.plot_loss(history)
     cnn.plot_accuracy(history)
 
-    cnn.save_history(history, "vgg19-mono-base")
+    # cnn.save_history(history, "vgg19-mono-base")
 
     # history = cnn.finetune_model(vgg19, train_imgs, train_probs, path = "models/vgg19-mono-ft", epochs = 10)
     # cnn.plot_loss(history)
