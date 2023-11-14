@@ -2,6 +2,7 @@ import numpy as np
 
 from tensorflow import keras
 from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import classification_report
 
 import matplotlib.pyplot as plt
 import pickle
@@ -20,7 +21,7 @@ def initialize_model(version = "vgg19"):
         return type_model
  
     elif version == "vgg19":
-        vgg19_base = keras.applications.VGG19(weights='imagenet', include_top=False, input_shape=(240, 250, 3))
+        vgg19_base = keras.applications.VGG19(weights='imagenet', include_top=False, input_shape=(240, 280, 3))
         vgg19_base.trainable = False
 
         vgg19_model = keras.models.Sequential([
@@ -90,3 +91,9 @@ def evaluate_metrics(model, X_test, y_test):
     score = model.evaluate(X_test, y_test, verbose=0)
     print("Test loss:", score[0])
     print("Test accuracy:", score[1])
+
+def predict_metrics(model, X_test, y_test):
+    predict_probs = model.predict(X_test)
+    predict_labels = np.argmax(predict_probs, axis = -1)
+
+    print(classification_report(predict_labels, y_test))
