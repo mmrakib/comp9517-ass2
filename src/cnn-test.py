@@ -3,10 +3,14 @@ import cnn as cnn
 from tensorflow import test
 import numpy as np
 
+highest_accuracy_i = 0
+highest_accuracy = 0
+
 for i in range(10):
 
-    train_imgs, train_probs, train_types, test_imgs, test_probs, test_types = load_and_preprocess_dataset(augment="All", out_types="Mono", aug_types = ["Flip"], channels=3, balance_probs=i)
+    train_imgs, train_probs, train_types, test_imgs, test_probs, test_types = load_and_preprocess_dataset(augment="All", out_types="Mono", aug_types = ["Flip", "Rot"], channels=3, balance_probs=i)
 
+    print("Balance by: ", str(i))
     print("Train probs count: ", np.unique(train_probs, return_counts = True))
     print("Test probs count: ", np.unique(test_probs, return_counts = True))
 
@@ -17,8 +21,11 @@ for i in range(10):
 
 
     history = cnn.train_model(vgg19, train_imgs, train_probs, epochs = 10)
-    cnn.plot_loss(history)
-    cnn.plot_accuracy(history)
+
+
+
+    # cnn.plot_loss(history)
+    # cnn.plot_accuracy(history)
 
     # cnn.save_history(history, "vgg19-mono-base")
 
@@ -26,10 +33,14 @@ for i in range(10):
     # cnn.plot_loss(history)
     # cnn.plot_accuracy(history)
 
-    cnn.evaluate_metrics(vgg19, test_imgs, test_probs)
+    score = cnn.evaluate_metrics(vgg19, test_imgs, test_probs)
+
+    if score[1] > highest_accuracy:
+        highest_accuracy = score[1]
+        highest_accuracy_i = i
+        print(highest_accuracy_i)
+
     cnn.predict_metrics(vgg19, test_imgs, test_probs)
 
-    del train_imgs
-    del train_probs
-    del train_imgs
-    del train_probs
+print("Highest accuracy: ", highest_accuracy)
+print("Best i value: ", highest_accuracy_i)

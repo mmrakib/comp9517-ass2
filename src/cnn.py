@@ -93,9 +93,11 @@ def evaluate_metrics(model, X_test, y_test):
     score = model.evaluate(X_test, y_test, verbose=0)
     print("Test loss:", score[0])
     print("Test accuracy:", score[1])
+    return score
 
 def predict_metrics(model, X_test, y_test):
     predict_probs = model.predict(X_test)
     predict_labels = np.argmax(predict_probs, axis = -1)
+    y_test = np.argmax(y_test, axis = -1)
 
     print(classification_report(predict_labels, y_test))
