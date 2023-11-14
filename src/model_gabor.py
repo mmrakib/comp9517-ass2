@@ -40,14 +40,23 @@ def initialize_model():
     model.add(keras.layers.MaxPooling2D((2, 2)))
     model.add(keras.layers.Flatten())
     model.add(keras.layers.Dense(64, activation='relu'))
-    model.add(keras.layers.Dense(1, activation = "softmax"))
+    #model.add(keras.layers.Dense(2, activation = "linear"))
+    model.add(keras.layers.Dense(4, activation='sigmoid'))
 
     return model
 
 def train_model(model, x_train, y_train, optimizer="adam", batch_size = 16, epochs = 100, validation_split = 0.25, workers=18):
 
-    #y_train = LabelEncoder().fit_transform(y_train)
-    #y_train = keras.utils.to_categorical(y_train)
+    y_train = LabelEncoder().fit_transform(y_train)
+    y_train = keras.utils.to_categorical(y_train)
+
+    #y_tmp = np.zeros((y_train.shape[0], 2))
+    #for i in range(0, y_train.shape[0]):
+    #    y_tmp[i][0] =     y_train[i]
+    #    y_tmp[i][1] = 1 - y_train[i]
+    #y_train = y_tmp
+    #del y_tmp
+    #y_train *= 255
 
     images_split = []
     block_size = math.ceil(x_train.shape[0] / (3*workers))
@@ -64,7 +73,7 @@ def train_model(model, x_train, y_train, optimizer="adam", batch_size = 16, epoc
     del images_split
     images = np.moveaxis(images, 1, -1)
     
-    model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=['accuracy'])
+    model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=['accuracy']) #categorical_crossentropy
     history = model.fit(images, y_train, epochs = epochs, validation_split = validation_split, 
                         batch_size = batch_size)
     
@@ -85,26 +94,30 @@ def predict(model, x_test, y_true, workers=18):
     images = np.moveaxis(images, 1, -1)
 
     y_prediction = model.predict(images)
-    #y_prediction = np.argmax(y_prediction, axis=1)
+    y_prediction = np.argmax(y_prediction, axis=1)
+    
 
-    for y in y_prediction:
-        if   y > 0.8333: y = 3
-        elif y > 0.5000: y = 2
-        elif y > 0.1667: y = 1
-        else: y = 0
-
-    for y in y_true:
-        if   y > 0.8333: y = 3
-        elif y > 0.5000: y = 2
-        elif y > 0.1667: y = 1
-        else: y = 0
+    #y_tmp = np.zeros(y_prediction.shape[0])
+    #for i in range(0, y_prediction.shape[0]):
+    #    if   y_prediction[i][0] > 0.8333*255: y_tmp[i] = 3
+    #    elif y_prediction[i][0] > 0.5000*255: y_tmp[i] = 2
+    #    elif y_prediction[i][0] > 0.1667*255: y_tmp[i] = 1
+    #    else:y_tmp[i] = 0
+    #y_prediction = y_tmp
+    #del y_tmp
+#
+    #for y in y_true:
+    #    if   y > 0.8333: y = 3
+    #    elif y > 0.5000: y = 2
+    #    elif y > 0.1667: y = 1
+    #    else: y = 0
 
     y_true = LabelEncoder().fit_transform(y_true)
     y_true = keras.utils.to_categorical(y_true)
     y_true = np.argmax(y_true, axis=1)
-    y_prediction = LabelEncoder().fit_transform(y_prediction)
-    y_prediction = keras.utils.to_categorical(y_prediction)
-    y_prediction = np.argmax(y_prediction, axis=1)
+    #y_prediction = LabelEncoder().fit_transform(y_prediction)
+    #y_prediction = keras.utils.to_categorical(y_prediction)
+    #y_prediction = np.argmax(y_prediction, axis=1)
     
     return y_true, y_prediction
 
@@ -117,7 +130,7 @@ def filter_images(images):
     max_val = images.max()
     for i in range(0, images.shape[0]):
         img_inv = (-1*images[i]) + 1
-        #img_inv = (img_inv - img_inv.mean()) / img_inv.std()
+        img_inv = (img_inv - img_inv.mean()) / img_inv.std()
 
         #images_filt[i][0] = img_inv
 
@@ -175,7 +188,7 @@ def make_filters(freqs):
     return kernels
 
 def conv(img, filter, thresh_tri=True, thresh_mean=False):
-    img = (img - img.mean()) / img.std()
+    #img = (img - img.mean()) / img.std()
     img_tri = np.zeros(img.shape)
     img_mean = np.zeros(img.shape)
     for kernel in filter:
@@ -226,11 +239,11 @@ def plot_accuracy(history):
 import Dataloader
 if __name__ == '__main__':
     train_imgs, train_probs, train_types, test_imgs, test_probs, test_types = \
-            Dataloader.load_and_preprocess_dataset(out_types="Poly", simple_probs=True, wire_removal="Crop", augment="None", aug_types=["Flip", "Bright"], crop_pix=10, shuffle=True, balance_probs=0)
+            Dataloader.load_and_preprocess_dataset(out_types="Mono", wire_removal="Crop", augment="None", aug_types=["Flip", "Rot"], crop_pix=10, shuffle=True, balance_probs=2)
 
 
     model = initialize_model()
-    history = train_model(model, train_imgs, train_probs, epochs=50, batch_size=800, validation_split=0.10)
+    history = train_model(model, train_imgs, train_probs, epochs=125, batch_size=800, validation_split=0.10)
     plot_loss(history)
     plot_accuracy(history)
 
