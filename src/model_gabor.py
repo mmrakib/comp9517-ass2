@@ -40,14 +40,14 @@ def initialize_model():
     model.add(keras.layers.MaxPooling2D((2, 2)))
     model.add(keras.layers.Flatten())
     model.add(keras.layers.Dense(64, activation='relu'))
-    model.add(keras.layers.Dense(2, activation = "softmax"))
+    model.add(keras.layers.Dense(1, activation = "softmax"))
 
     return model
 
 def train_model(model, x_train, y_train, optimizer="adam", batch_size = 16, epochs = 100, validation_split = 0.25, workers=18):
 
-    y_train = LabelEncoder().fit_transform(y_train)
-    y_train = keras.utils.to_categorical(y_train)
+    #y_train = LabelEncoder().fit_transform(y_train)
+    #y_train = keras.utils.to_categorical(y_train)
 
     images_split = []
     block_size = math.ceil(x_train.shape[0] / (3*workers))
@@ -85,11 +85,26 @@ def predict(model, x_test, y_true, workers=18):
     images = np.moveaxis(images, 1, -1)
 
     y_prediction = model.predict(images)
-    y_prediction = np.argmax(y_prediction, axis=1)
+    #y_prediction = np.argmax(y_prediction, axis=1)
+
+    for y in y_prediction:
+        if   y > 0.8333: y = 3
+        elif y > 0.5000: y = 2
+        elif y > 0.1667: y = 1
+        else: y = 0
+
+    for y in y_true:
+        if   y > 0.8333: y = 3
+        elif y > 0.5000: y = 2
+        elif y > 0.1667: y = 1
+        else: y = 0
 
     y_true = LabelEncoder().fit_transform(y_true)
     y_true = keras.utils.to_categorical(y_true)
     y_true = np.argmax(y_true, axis=1)
+    y_prediction = LabelEncoder().fit_transform(y_prediction)
+    y_prediction = keras.utils.to_categorical(y_prediction)
+    y_prediction = np.argmax(y_prediction, axis=1)
     
     return y_true, y_prediction
 
