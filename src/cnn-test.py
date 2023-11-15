@@ -4,9 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 
-highest_accuracy_i = 0
-highest_accuracy = 0
-
 types = ["Mono", "Poly"]
 
 for type in types:
@@ -37,3 +34,14 @@ for type in types:
     score = cnn.evaluate_metrics(vgg19, test_imgs, test_probs, filename = f'vgg19-{type}-finetuned')
 
     cnn.predict_metrics(vgg19, test_imgs, test_probs, filename= f'vgg19-{type}-finetuned')
+
+# train_imgs, train_probs, train_types, test_imgs, test_probs, test_types = load_and_preprocess_dataset(augment="All", out_types="Mono", aug_types=["Flip"], channels=3, balance_probs=0)
+
+# train_probs = cnn.onehot_encode(train_probs)
+# test_probs = cnn.onehot_encode(test_probs)
+
+# vgg19 = tf.keras.models.load_model('../models/vgg19-mono-ft.keras')
+
+# score = cnn.evaluate_metrics(vgg19, test_imgs, test_probs, filename = f'vgg19-mono-finetuned')
+
+# cnn.predict_metrics(vgg19, test_imgs, test_probs, filename= f'vgg19-mono-finetuned')
