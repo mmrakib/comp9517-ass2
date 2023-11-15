@@ -1,85 +1,75 @@
+import matplotlib.pyplot as plt
 import numpy as np
-import cv2 as cv
-from sklearn.metrics import confusion_matrix, accuracy_score, f1_score
-import matplotlib as plt
+from sklearn import metrics         as sk_met
 
-from elpvdata import ELPVData
 
-class PerformanceTest:
-    # NOTE: The use of 'classification_method' as a function reference is VERY sketchy
-    # Potential solution is to hard-code the performance testing PER classification method once they have all been written
-    def __init__(self, classification_method):
-        self.classification_method = classification_method
+def display_results(y_true_m, y_true_p, y_predict_m, y_predict_p):
+    y_true    = np.concatenate((y_true_m,    y_true_p),    axis=0) 
+    y_predict = np.concatenate((y_predict_m, y_predict_p), axis=0) 
 
-        dataobj = ELPVData()
-        self.training_data = dataobj.get_training_data()
-        self.testing_data = dataobj.get_testing_data()
+    print_scores(y_true_m, y_predict_m, "Mono Results    ")
+    print_scores(y_true_p, y_predict_p, "Poly Results    ")
+    print_scores(y_true,   y_predict, "Combined Results")
+    
+    display_conf_mat([y_true_m, y_true, y_true_p], [y_predict_m, y_predict, y_predict_p])
 
-        training_mono_indices = [i for i, label in enumerate(self.training_data['labels']) if label == 'monocrystalline']
-        training_poly_indices = [i for i, label in enumerate(self.training_data['labels']) if label == 'polycrystalline']
-        self.training_mono_images = [self.training_data['images'][i] for i in training_mono_indices]
-        self.training_poly_images = [self.training_data['images'][i] for i in training_poly_indices]
+def predict_results(prediction_func, model, test_imgs, test_probs, test_types):
+    imgs_m = test_imgs[test_types == "mono"]
+    imgs_p = test_imgs[test_types == "poly"]
 
-        testing_mono_indices = [i for i, label in enumerate(self.testing_data['labels']) if label == 'monocrystalline']
-        testing_poly_indices = [i for i, label in enumerate(self.testing_data['labels']) if label == 'polycrystalline']
-        self.testing_mono_images = [self.testing_data['images'][i] for i in testing_mono_indices]
-        self.testing_poly_images = [self.testing_data['images'][i] for i in testing_poly_indices]
+    probs_m = test_probs[test_types == "mono"]
+    probs_p = test_probs[test_types == "poly"]
 
-    def test_performance_all(self):
-        predicted_labels = self.classification_method(self.training_data['images'], self.testing_data['images'])
+    y_true_m, y_predict_m = prediction_func(model, imgs_m, probs_m)
+    y_true_p, y_predict_p = prediction_func(model, imgs_p, probs_p)
+    return y_true_m, y_true_p, y_predict_m, y_predict_p
 
-        confusion_matrix_result = confusion_matrix(self.testing_data['labels'], predicted_labels)
-        accuracy = accuracy_score(self.testing_data['labels'], predicted_labels)
-        f1 = f1_score(self.testing_data['labels'], predicted_labels)
+def print_scores(y_true, y_predict, title):
+    print(title, "|",
+        " Accuracy:",   round(sk_met.accuracy_score( y_true, y_predict),5),
+        " Precision:",  round(sk_met.precision_score(y_true, y_predict, average='macro', zero_division=np.nan),5),
+        " Recall:",     round(sk_met.recall_score(   y_true, y_predict, average='macro'),5),
+        " F1:",         round(sk_met.f1_score(       y_true, y_predict, average='macro'),5))
+    
+def display_conf_mat(y_true_lst, y_predict_lst):
+    f, axes = plt.subplots(1, 3, figsize=(20, 5), sharey='row')
+    prob_name_lst = ["0%", "33%", "66%", "100%"]
+    plt_names = ["Mono", "Combined", "Poly"]
+    for i in range(0,3):
+        cf_matrix = sk_met.confusion_matrix(y_true_lst[i], y_predict_lst[i])
+        disp = sk_met.ConfusionMatrixDisplay(cf_matrix, display_labels=prob_name_lst)
+        disp.plot(ax=axes[i], xticks_rotation=45)
+        disp.ax_.set_title(plt_names[i])
+        disp.ax_.set_xlabel('')
+        if i!=0:
+            disp.ax_.set_ylabel('')
 
-        return {
-            'confusion_matrix': confusion_matrix_result,
-            'accuracy': accuracy,
-            'f1_score': f1
-        }
+    f.text(0.4, 0.1, 'Predicted label', ha='left')
+    plt.subplots_adjust(wspace=0.40, hspace=0.1)
 
-    def test_performance_mono(self):
-        predicted_labels = self.classification_method(self.training_mono_images, self.testing_mono_images)
 
-        confusion_matrix_result = confusion_matrix(self.testing_data['labels'], predicted_labels)
-        accuracy = accuracy_score(self.testing_data['labels'], predicted_labels)
-        f1 = f1_score(self.testing_data['labels'], predicted_labels)
+    #f.colorbar(disp.im_, ax=axes)
+    plt.show()
 
-        return {
-            'confusion_matrix': confusion_matrix_result,
-            'accuracy': accuracy,
-            'f1_score': f1
-        }
+def plot_train_data(history):
+    #loss
+    pt1 = plt.subplot(1,2,1)
+    pt1.title.set_text("Loss")
+    plt.plot(history.history['loss'], label='loss')
+    plt.plot(history.history['val_loss'], label = 'val_loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.yscale('log',base=2) 
+    plt.legend(loc='upper right')
 
-    def test_performance_poly(self):
-        predicted_labels = self.classification_method(self.training_poly_images, self.testing_poly_images)
+    #accuracy
+    pt2 = plt.subplot(1,2,2)
+    pt2.title.set_text("Mono")
+    plt.plot(history.history['accuracy'], label='accuracy')
+    plt.plot(history.history['val_accuracy'], label = 'val_accuracy')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.ylim([-0.1, 1.1])
+    plt.legend(loc='lower right')
+    plt.show()
 
-        confusion_matrix_result = confusion_matrix(self.testing_data['labels'], predicted_labels)
-        accuracy = accuracy_score(self.testing_data['labels'], predicted_labels)
-        f1 = f1_score(self.testing_data['labels'], predicted_labels)
-
-        return {
-            'confusion_matrix': confusion_matrix_result,
-            'accuracy': accuracy,
-            'f1_score': f1
-        }
-
-    @staticmethod
-    def plot_confusion_matrix(confusion_matrix, classes, title='Confusion Matrix', cmap=plt.cm.Blues):
-        plt.imshow(confusion_matrix, interpolation='nearest', cmap=cmap)
-        plt.title(title)
-        plt.colorbar()
-
-        tick_marks = np.arange(len(classes))
-        plt.xticks(tick_marks, classes, rotation=45)
-        plt.yticks(tick_marks, classes)
-
-        fmt = 'd'
-        thresh = confusion_matrix.max() / 2.
-        for i in range(confusion_matrix.shape[0]):
-            for j in range(confusion_matrix.shape[1]):
-                plt.text(j, i, format(confusion_matrix[i, j], fmt), horizontalalignment="center", color="white" if confusion_matrix[i, j] > thresh else "black")
-
-        plt.tight_layout()
-        plt.ylabel('True Label')
-        plt.xlabel('Predicted Label')

@@ -130,7 +130,6 @@ def filter_images(images):
         #plt.show()
     return images_filt
 
-@timefunc
 def make_filters(freqs):
     kernels = []
     i = 0
@@ -191,23 +190,19 @@ def plot_accuracy(history):
 
 
 import Dataloader
+import performancetest as pt
 if __name__ == '__main__':
     train_imgs, train_probs, train_types, test_imgs, test_probs, test_types = \
-            Dataloader.load_and_preprocess_dataset(out_types="Poly", wire_removal="Crop", augment="All", aug_types=["Flip"], crop_pix=20, shuffle=True, balance_probs=2)
+            Dataloader.load_and_preprocess_dataset(out_types="All", wire_removal="Crop", augment="None", aug_types=["Flip"], crop_pix=20, shuffle=True, balance_probs=2)
+            #Dataloader.load_and_preprocess_dataset(out_types="Poly", wire_removal="Crop", augment="All", aug_types=["Flip"], crop_pix=20, shuffle=True, balance_probs=2)
 
 
     model = initialize_model()
-    history = train_model(model, train_imgs, train_probs, epochs=50, batch_size=1000)
-    plot_loss(history)
-    plot_accuracy(history)
+    history = train_model(model, train_imgs, train_probs, epochs=3, batch_size=1000)
+    #plot_loss(history)
+    #plot_accuracy(history)
 
+    pt.plot_train_data(history)
+    y_true_m, y_true_p, y_predict_m, y_predict_p = pt.predict_results(predict, model, test_imgs, test_probs, test_types)
+    pt.display_results(y_true_m, y_true_p, y_predict_m, y_predict_p)
 
-    #Predict
-    y_true, y_prediction = predict(model, test_imgs, test_probs)
-    print("train |",
-        " Accuracy:",   round(sk_met.accuracy_score( y_true, y_prediction),5),
-        " Precision:",  round(sk_met.precision_score(y_true, y_prediction, average='macro'),5),
-        " Recall:",     round(sk_met.recall_score(   y_true, y_prediction, average='macro'),5),
-        " F1:",         round(sk_met.f1_score(       y_true, y_prediction, average='macro'),5))
-    sk_met.ConfusionMatrixDisplay(sk_met.confusion_matrix(y_true, y_prediction)).plot()
-    plt.show()
