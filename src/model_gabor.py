@@ -191,15 +191,19 @@ def plot_accuracy(history):
 
 
 import Dataloader
+import performancetest as pt
 if __name__ == '__main__':
     train_imgs, train_probs, train_types, test_imgs, test_probs, test_types = \
-            Dataloader.load_and_preprocess_dataset(out_types="Poly", wire_removal="Crop", augment="All", aug_types=["Flip"], crop_pix=20, shuffle=True, balance_probs=2)
+            Dataloader.load_and_preprocess_dataset(out_types="All", wire_removal="Crop", augment="None", aug_types=["Flip"], crop_pix=20, shuffle=True, balance_probs=2)
+            #Dataloader.load_and_preprocess_dataset(out_types="Poly", wire_removal="Crop", augment="All", aug_types=["Flip"], crop_pix=20, shuffle=True, balance_probs=2)
 
 
     model = initialize_model()
-    history = train_model(model, train_imgs, train_probs, epochs=50, batch_size=1000)
-    plot_loss(history)
-    plot_accuracy(history)
+    history = train_model(model, train_imgs, train_probs, epochs=3, batch_size=1000)
+    #plot_loss(history)
+    #plot_accuracy(history)
+
+    pt.plot_train_data(history)
 
 
     #Predict
