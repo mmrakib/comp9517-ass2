@@ -130,7 +130,6 @@ def filter_images(images):
         #plt.show()
     return images_filt
 
-@timefunc
 def make_filters(freqs):
     kernels = []
     i = 0
@@ -204,14 +203,6 @@ if __name__ == '__main__':
     #plot_accuracy(history)
 
     pt.plot_train_data(history)
+    y_true_m, y_true_p, y_predict_m, y_predict_p = pt.predict_results(predict, model, test_imgs, test_probs, test_types)
+    pt.display_results(y_true_m, y_true_p, y_predict_m, y_predict_p)
 
-
-    #Predict
-    y_true, y_prediction = predict(model, test_imgs, test_probs)
-    print("train |",
-        " Accuracy:",   round(sk_met.accuracy_score( y_true, y_prediction),5),
-        " Precision:",  round(sk_met.precision_score(y_true, y_prediction, average='macro'),5),
-        " Recall:",     round(sk_met.recall_score(   y_true, y_prediction, average='macro'),5),
-        " F1:",         round(sk_met.f1_score(       y_true, y_prediction, average='macro'),5))
-    sk_met.ConfusionMatrixDisplay(sk_met.confusion_matrix(y_true, y_prediction)).plot()
-    plt.show()

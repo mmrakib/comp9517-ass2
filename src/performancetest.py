@@ -11,17 +11,7 @@ def display_results(y_true_m, y_true_p, y_predict_m, y_predict_p):
     print_scores(y_true_p, y_predict_p, "Poly Results")
     print_scores(y_true,   y_predict, "Combined Results")
     
-    plt.title("Confusion Matrix")
-    pt1 = plt.subplot(2,2,1)
-    pt1.title.set_text("Mono")
-    sk_met.ConfusionMatrixDisplay(sk_met.confusion_matrix(y_true_m, y_predict_m)).plot()
-    pt2 = plt.subplot(2,2,2)
-    pt2.title.set_text("Poly")
-    sk_met.ConfusionMatrixDisplay(sk_met.confusion_matrix(y_true_p, y_predict_p)).plot()
-    pt3 = plt.subplot(2,1,2)
-    pt3.title.set_text("Combined")
-    sk_met.ConfusionMatrixDisplay(sk_met.confusion_matrix(y_true, y_predict)).plot()
-    plt.show()
+    display_conf_mat([y_true_m, y_true, y_true_p], [y_predict_m, y_predict, y_predict_p])
 
 def predict_results(prediction_func, model, test_imgs, test_probs, test_types):
     imgs_m = test_imgs[test_types == "mono"]
@@ -37,10 +27,31 @@ def predict_results(prediction_func, model, test_imgs, test_probs, test_types):
 def print_scores(y_true, y_predict, title):
     print(title, "|",
         " Accuracy:",   round(sk_met.accuracy_score( y_true, y_predict),5),
-        " Precision:",  round(sk_met.precision_score(y_true, y_predict, average='macro'),5),
+        " Precision:",  round(sk_met.precision_score(y_true, y_predict, average='macro', zero_division=np.nan),5),
         " Recall:",     round(sk_met.recall_score(   y_true, y_predict, average='macro'),5),
         " F1:",         round(sk_met.f1_score(       y_true, y_predict, average='macro'),5))
     
+def display_conf_mat(y_true_lst, y_predict_lst):
+    f, axes = plt.subplots(1, 3, figsize=(20, 5), sharey='row')
+    prob_name_lst = ["0%", "33%", "66%", "100%"]
+    plt_names = ["Mono", "Combined", "Poly"]
+    for i in range(0,3):
+        cf_matrix = sk_met.confusion_matrix(y_true_lst[i], y_predict_lst[i])
+        disp = sk_met.ConfusionMatrixDisplay(cf_matrix, display_labels=prob_name_lst[i])
+        disp.plot(ax=axes[i], xticks_rotation=45)
+        disp.ax_.set_title(plt_names[i])
+        disp.im_.colorbar.remove()
+        disp.ax_.set_xlabel('')
+        if i!=0:
+            disp.ax_.set_ylabel('')
+
+    f.text(0.4, 0.1, 'Predicted label', ha='left')
+    plt.subplots_adjust(wspace=0.40, hspace=0.1)
+
+
+    f.colorbar(disp.im_, ax=axes)
+    plt.show()
+
 def plot_train_data(history):
     #loss
     pt1 = plt.subplot(1,2,1)
