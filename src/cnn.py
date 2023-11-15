@@ -96,7 +96,7 @@ def evaluate_metrics(model, X_test, y_test, filename=None):
     print("Test accuracy:", score[1])
 
     if filename:
-        with open('../outputs/' + filename + '_evaluate.txt', 'w') as f:
+        with open('../outputs/' + filename + '_evaluate', 'wb') as f:
             pickle.dump(score, f)
 
     return score
@@ -106,8 +106,8 @@ def predict_metrics(model, X_test, y_test, filename=None):
     predict_labels = np.argmax(predict_probs, axis = -1)
     y_test = np.argmax(y_test, axis = -1)
 
-    if filename:
-        with open('../outputs/' + filename + '_cr.txt', 'w') as f:
-            pickle.dump(classification_report(predict_labels, y_test), f)
-
     print(classification_report(predict_labels, y_test))
+
+    if filename:
+        with open('../outputs/' + filename + '_cr', 'wb') as f:
+            pickle.dump(classification_report(predict_labels, y_test), f)
