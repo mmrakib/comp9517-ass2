@@ -43,18 +43,19 @@ def onehot_encode(y):
     return y
 
 #for initial dense layer training
-def train_model(model, X_train, y_train, filename = None, optimizer = "adam", batch_size = 16, epochs = 100, validation_split = 0.2):
+def train_model(model, X_train, y_train, filename = None, optimizer = keras.optimizers.Adam(learning_rate = 0.001, beta_1 = 0.9, beta_2 = 0.999, epsilon=1e-08), batch_size = 16, epochs = 100, validation_split = 0.2):
        
     es = keras.callbacks.EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience = 5)
     model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=['accuracy'])
     history = model.fit(X_train, y_train, epochs = epochs, validation_split = validation_split, batch_size = batch_size, callbacks = [es])
+ 
     if filename != None:
         model.save("../models/" + filename)
     return history
 
-def finetune_model(model, X_train, y_train, filename = None, optimizer = "adam", batch_size = 16, epochs = 100, validation_split = 0.2, iterations = 1, unfreeze_loop = 2):
+def finetune_model(model, X_train, y_train, filename = None, optimizer = keras.optimizers.SGD(learning_rate = 0.0005, momentum=0.9), batch_size = 16, epochs = 100, validation_split = 0.2, iterations = 1, unfreeze_loop = 2):
 
-    es = keras.callbacks.EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience = 3)
+    es = keras.callbacks.EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience = 5)
 
     for i in range(iterations):
         for layer in model.layers[-(unfreeze_loop * (1 + 1)):]:
