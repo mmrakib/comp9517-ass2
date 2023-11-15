@@ -23,13 +23,14 @@ import math
 
 def initialize_model(): 
     model = keras.models.Sequential()
-    model.add(keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(240, 280, 4)))
+    model.add(keras.layers.Conv2D(64, (3, 3), activation='relu', input_shape=(240, 280, 4)))
     model.add(keras.layers.MaxPooling2D((2, 2)))
-    model.add(keras.layers.Conv2D(64, (3, 3), activation='relu'))
+    model.add(keras.layers.Conv2D(128, (3, 3), activation='relu'))
     model.add(keras.layers.MaxPooling2D((2, 2)))
-    model.add(keras.layers.GlobalAveragePooling2D)
+    model.add(keras.layers.GlobalAveragePooling2D())
     model.add(keras.layers.Dense(64, activation='relu'))
     model.add(keras.layers.Dense(16, activation='relu'))
+    model.add(keras.layers.Dense(1, activation='relu'))
     model.add(keras.layers.Dense(4, activation = "softmax"))
 
     return model
