@@ -278,13 +278,13 @@ def make_3_channel(imgs):
 def split_t_t_data(imgs, probs, types, out_types):
     if(out_types == "All" or out_types == "Mono"):
         train_m_imgs, test_m_imgs, train_m_probs, test_m_probs = \
-            train_test_split(imgs[types == "mono"], probs[types == "mono"], test_size=0.25, random_state=50, shuffle=True, stratify=probs)
+            train_test_split(imgs[types == "mono"], probs[types == "mono"], test_size=0.25, random_state=50, shuffle=True, stratify=probs[types == "mono"])
         if(out_types == "Mono"):           
             return  train_m_imgs, train_m_probs, np.full([train_m_probs.shape[0],4], "mono"), test_m_imgs, test_m_probs, np.full([test_m_probs.shape[0],4], "mono")
 
     if(out_types == "All" or out_types == "Poly"):
         train_p_imgs, test_p_imgs, train_p_probs, test_p_probs = \
-                train_test_split(imgs[types == "poly"], probs[types == "poly"], test_size=0.25, random_state=50, shuffle=True, stratify=probs)
+                train_test_split(imgs[types == "poly"], probs[types == "poly"], test_size=0.25, random_state=50, shuffle=True, stratify=probs[types == "poly"])
         if(out_types == "Poly"):
             return  train_p_imgs, train_p_probs, np.full([train_p_probs.shape[0],4], "poly"), test_p_imgs, test_p_probs, np.full([test_p_probs.shape[0],4], "poly")
 

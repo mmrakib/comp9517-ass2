@@ -22,26 +22,14 @@ import math
 # https://ieeexplore.ieee.org/document/6728529
 
 def initialize_model(): 
-    #vgg19_base = keras.applications.VGG19(weights='imagenet', include_top=False, input_shape=(240, 280, 3))
-    #vgg19_base.trainable = False
-    #model = keras.models.Sequential([
-    #vgg19_base,
-    #keras.layers.GlobalAveragePooling2D(),
-    #keras.layers.Flatten(input_shape=vgg19_base.output_shape[1:]),
-    #keras.layers.Dense(4096, activation='relu', kernel_initializer='he_normal'),
-    #keras.layers.Dense(2048, activation='relu', kernel_initializer='he_normal'),
-    #keras.layers.Dense(4, activation='softmax')
-    #])
-
     model = keras.models.Sequential()
-    model.add(keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(240, 280, 3)))#240, 250, 3)))
+    model.add(keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(240, 280, 4)))
     model.add(keras.layers.MaxPooling2D((2, 2)))
     model.add(keras.layers.Conv2D(64, (3, 3), activation='relu'))
     model.add(keras.layers.MaxPooling2D((2, 2)))
     model.add(keras.layers.Flatten())
     model.add(keras.layers.Dense(64, activation='relu'))
-    #model.add(keras.layers.Dense(2, activation = "linear"))
-    model.add(keras.layers.Dense(4, activation='sigmoid'))
+    model.add(keras.layers.Dense(4, activation = "softmax"))
 
     return model
 
@@ -50,30 +38,26 @@ def train_model(model, x_train, y_train, optimizer="adam", batch_size = 16, epoc
     y_train = LabelEncoder().fit_transform(y_train)
     y_train = keras.utils.to_categorical(y_train)
 
-    #y_tmp = np.zeros((y_train.shape[0], 2))
-    #for i in range(0, y_train.shape[0]):
-    #    y_tmp[i][0] =     y_train[i]
-    #    y_tmp[i][1] = 1 - y_train[i]
-    #y_train = y_tmp
-    #del y_tmp
-    #y_train *= 255
-
     images_split = []
     block_size = math.ceil(x_train.shape[0] / (3*workers))
     for i in range(0, 3*workers+1):
-        if i*block_size >= len(x_train):
-            break
         images_split.append(x_train[i*block_size:(i+1)*block_size])
         if(x_train.shape[0] < (i+1)*block_size):
             break
-    del x_train, block_size # yes im using that much ram :D
 
     with Pool(workers) as pool:
-        images = np.concatenate( pool.map(filter_images, images_split, chunksize=1), axis=0 )
-    del images_split
-    images = np.moveaxis(images, 1, -1)
+        images_tmp = pool.map(filter_images, images_split, chunksize=1)
+
     
-    model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=['accuracy']) #categorical_crossentropy
+    for i in range(0, len(images_tmp)):
+        if i == 0:
+            images = images_tmp[i]
+            continue
+        images = np.append(images, images_tmp[i], axis=0)
+    images = np.moveaxis(images, 1, -1)
+
+    
+    model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=['accuracy'])
     history = model.fit(images, y_train, epochs = epochs, validation_split = validation_split, 
                         batch_size = batch_size)
     
@@ -86,89 +70,59 @@ def predict(model, x_test, y_true, workers=18):
         images_split.append(x_test[i*block_size:(i+1)*block_size])
         if(x_test.shape[0] < (i+1)*block_size):
             break
-    del x_test, block_size # yes im using that much ram :D
 
     with Pool(workers) as pool:
-        images = np.concatenate( pool.map(filter_images, images_split, chunksize=1), axis=0 )
-    del images_split
+        images_tmp = pool.map(filter_images, images_split, chunksize=1)
+
+    
+    for i in range(0, len(images_tmp)):
+        if i == 0:
+            images = images_tmp[i]
+            continue
+        images = np.append(images, images_tmp[i], axis=0)
     images = np.moveaxis(images, 1, -1)
 
     y_prediction = model.predict(images)
     y_prediction = np.argmax(y_prediction, axis=1)
-    
-
-    #y_tmp = np.zeros(y_prediction.shape[0])
-    #for i in range(0, y_prediction.shape[0]):
-    #    if   y_prediction[i][0] > 0.8333*255: y_tmp[i] = 3
-    #    elif y_prediction[i][0] > 0.5000*255: y_tmp[i] = 2
-    #    elif y_prediction[i][0] > 0.1667*255: y_tmp[i] = 1
-    #    else:y_tmp[i] = 0
-    #y_prediction = y_tmp
-    #del y_tmp
-#
-    #for y in y_true:
-    #    if   y > 0.8333: y = 3
-    #    elif y > 0.5000: y = 2
-    #    elif y > 0.1667: y = 1
-    #    else: y = 0
 
     y_true = LabelEncoder().fit_transform(y_true)
     y_true = keras.utils.to_categorical(y_true)
     y_true = np.argmax(y_true, axis=1)
-    #y_prediction = LabelEncoder().fit_transform(y_prediction)
-    #y_prediction = keras.utils.to_categorical(y_prediction)
-    #y_prediction = np.argmax(y_prediction, axis=1)
     
     return y_true, y_prediction
 
 def filter_images(images):
     filters = make_filters([0.13, 0.25, 0.35, 0.45, 0.62, 0.70])
-    filters_tri  = [0,1,2,3]
-    filters_mean = [2] #4
+    filters_tri  = [0,1,2,3,4,5]
+    filters_mean = [2,4]
 
-    images_filt = np.zeros((images.shape[0], 3, images.shape[1], images.shape[2])) #len(filters)+2
+    images_filt = np.zeros((images.shape[0], 4, images.shape[1], images.shape[2])) #len(filters)+2
     max_val = images.max()
     for i in range(0, images.shape[0]):
         img_inv = (-1*images[i]) + 1
-        img_inv = (img_inv - img_inv.mean()) / img_inv.std()
-
         #images_filt[i][0] = img_inv
 
-        #k = 1
-        k_tri = 2
+        k = 1
         for j in range(0, len(filters)):
             filter_tri  = j in filters_tri
             filter_mean = j in filters_mean
             img_tri, img_mean = conv(img_inv, filters[j], filter_tri, filter_mean)
             if filter_tri:
-                images_filt[i][k_tri] += img_tri
-        #    if filter_mean:
-        #        images_filt[i][k] = img_mean
-        #        k+=1
-        #images_filt[i][k_tri] /= len(filters_tri)
-        images_filt[i][k_tri] = (np.clip(images_filt[i][k_tri], 0, 1))
-        ##images_filt[i][k_tri] = Dataloader.calc_contrast_stretch(images_filt[i][k_tri], 
-        ##                                images_filt[i][k_tri].min(), images_filt[i][k_tri].max())
-#
-        ##for k in [max_val*.1, max_val*.4, max_val*.65, max_val*.8, max_val*.9]:
-        ##    images_filt[i][0] +=  img_inv > k
-        ##images_filt[i][0] /= 4
-#
-        ##images_filt[i][0] = images_filt[i][0] * img_inv
-        #images_filt[i][1] = images_filt[i][1] * img_inv
-        #images_filt[i][2] = images_filt[i][2] * img_inv
-        images_filt[i][0] = cv.Canny((img_inv*255).astype(np.uint8), 20, 50)
-        images_filt[i][1] = cv.Canny((img_inv*255).astype(np.uint8), 50, 80)
+                images_filt[i][0] += img_tri
+            if filter_mean:
+                images_filt[i][k] = img_mean
+                k+=1
+        images_filt[i][0] /= len(filters_tri)
+        images_filt[i][0] = Dataloader.calc_contrast_stretch(images_filt[i][0], 
+                                        images_filt[i][0].min(), images_filt[i][0].max())
 
-        #plt.subplot(2,2,1)
-        #plt.imshow(img_inv, cmap='grey')
-        #plt.subplot(2,2,2)
-        #plt.imshow(images_filt[i][0], cmap='grey')
-        #plt.subplot(2,2,3)
-        #plt.imshow(images_filt[i][1], cmap='grey')
-        #plt.subplot(2,2,4)
-        #plt.imshow(images_filt[i][2], cmap='grey')
-        #plt.show()
+        images_filt[1][0] *= img_inv
+        images_filt[1][1] *= img_inv
+        images_filt[1][2] *= img_inv
+
+        #for k in [max_val*.1, max_val*.4, max_val*.65, max_val*.8, max_val*.9]:
+        #    images_filt[i][4] +=  img_inv > k
+        #images_filt[i][4] /= 4
 
         #for j in range(0, 5):
         #    plt.subplot(2,3,j+1)
@@ -188,7 +142,7 @@ def make_filters(freqs):
     return kernels
 
 def conv(img, filter, thresh_tri=True, thresh_mean=False):
-    #img = (img - img.mean()) / img.std()
+    img = (img - img.mean()) / img.std()
     img_tri = np.zeros(img.shape)
     img_mean = np.zeros(img.shape)
     for kernel in filter:
@@ -222,7 +176,7 @@ def plot_loss(history):
     plt.plot(history.history['val_loss'], label = 'val_loss')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
-    plt.ylim([0, 5])
+    plt.ylim([0.5, 5])
     plt.legend(loc='lower right')
     plt.show()
 
@@ -239,18 +193,18 @@ def plot_accuracy(history):
 import Dataloader
 if __name__ == '__main__':
     train_imgs, train_probs, train_types, test_imgs, test_probs, test_types = \
-            Dataloader.load_and_preprocess_dataset(out_types="Mono", wire_removal="Crop", augment="None", aug_types=["Flip", "Rot"], crop_pix=10, shuffle=True, balance_probs=2)
+            Dataloader.load_and_preprocess_dataset(out_types="Poly", wire_removal="Crop", augment="All", aug_types=["Flip"], crop_pix=20, shuffle=True, balance_probs=2)
 
 
     model = initialize_model()
-    history = train_model(model, train_imgs, train_probs, epochs=125, batch_size=800, validation_split=0.10)
+    history = train_model(model, train_imgs, train_probs, epochs=50, batch_size=1000)
     plot_loss(history)
     plot_accuracy(history)
 
 
     #Predict
     y_true, y_prediction = predict(model, test_imgs, test_probs)
-    print("test |",
+    print("train |",
         " Accuracy:",   round(sk_met.accuracy_score( y_true, y_prediction),5),
         " Precision:",  round(sk_met.precision_score(y_true, y_prediction, average='macro'),5),
         " Recall:",     round(sk_met.recall_score(   y_true, y_prediction, average='macro'),5),
