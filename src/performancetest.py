@@ -40,7 +40,6 @@ def display_conf_mat(y_true_lst, y_predict_lst):
         disp = sk_met.ConfusionMatrixDisplay(cf_matrix, display_labels=prob_name_lst)
         disp.plot(ax=axes[i], xticks_rotation=45)
         disp.ax_.set_title(plt_names[i])
-        disp.im_.colorbar.remove()
         disp.ax_.set_xlabel('')
         if i!=0:
             disp.ax_.set_ylabel('')
