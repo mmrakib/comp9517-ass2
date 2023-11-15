@@ -50,7 +50,7 @@ def train_model(model, X_train, y_train, filename = None, optimizer = keras.opti
     history = model.fit(X_train, y_train, epochs = epochs, validation_split = validation_split, batch_size = batch_size, callbacks = [es])
  
     if filename != None:
-        model.save("../models/" + filename)
+        model.save("../models/" + filename + ".keras")
     return history
 
 def finetune_model(model, X_train, y_train, filename = None, optimizer = keras.optimizers.SGD(learning_rate = 0.0005, momentum=0.9), batch_size = 16, epochs = 100, validation_split = 0.2, iterations = 1, unfreeze_loop = 2):
@@ -58,14 +58,14 @@ def finetune_model(model, X_train, y_train, filename = None, optimizer = keras.o
     es = keras.callbacks.EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience = 5)
 
     for i in range(iterations):
-        for layer in model.layers[-(unfreeze_loop * (1 + 1)):]:
+        for layer in model.layers[-(unfreeze_loop * (i + 1)):]:
             layer.trainable = True
 
         model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=['accuracy'])
         history = model.fit(X_train, y_train, epochs = epochs, validation_split = validation_split, batch_size = batch_size, callbacks = [es])
     
     if filename != None:
-        model.save("../models/" + filename)
+        model.save("../models/" + filename + ".keras")
     return history
 
 def save_history(history, filename):
@@ -90,15 +90,24 @@ def plot_accuracy(history):
     plt.legend(loc='lower right')
     plt.show()
 
-def evaluate_metrics(model, X_test, y_test):
+def evaluate_metrics(model, X_test, y_test, filename=None):
     score = model.evaluate(X_test, y_test, verbose=0)
     print("Test loss:", score[0])
     print("Test accuracy:", score[1])
+
+    if filename:
+        with open('../outputs/' + filename + '_evaluate.txt', 'w') as f:
+            pickle.dump(score, f)
+
     return score
 
-def predict_metrics(model, X_test, y_test):
+def predict_metrics(model, X_test, y_test, filename=None):
     predict_probs = model.predict(X_test)
     predict_labels = np.argmax(predict_probs, axis = -1)
     y_test = np.argmax(y_test, axis = -1)
+
+    if filename:
+        with open('../outputs/' + filename + '_cr.txt', 'w') as f:
+            pickle.dump(classification_report(predict_labels, y_test), f)
 
     print(classification_report(predict_labels, y_test))
