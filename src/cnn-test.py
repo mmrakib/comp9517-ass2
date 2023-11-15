@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 highest_accuracy_i = 0
 highest_accuracy = 0
 
-train_imgs, train_probs, train_types, test_imgs, test_probs, test_types = load_and_preprocess_dataset(augment="All", out_types="Mono", channels=3, balance_probs=0)
+train_imgs, train_probs, train_types, test_imgs, test_probs, test_types = load_and_preprocess_dataset(augment="All", out_types="Mono", aug_types=["Flip", "Rot"], channels=3, balance_probs=0)
 
 print("Train probs count: ", np.unique(train_probs, return_counts = True))
 print("Test probs count: ", np.unique(test_probs, return_counts = True))
