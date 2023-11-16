@@ -2,7 +2,7 @@ import numpy as np
 
 from tensorflow import keras
 from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, confusion_matrix, ConfusionMatrixDisplay, f1_score
 
 import matplotlib.pyplot as plt
 import pickle
@@ -45,7 +45,7 @@ def onehot_encode(y):
 #for initial dense layer training
 def train_model(model, X_train, y_train, filename = None, optimizer = keras.optimizers.Adam(learning_rate = 0.001, beta_1 = 0.9, beta_2 = 0.999, epsilon=1e-08), batch_size = 16, epochs = 100, validation_split = 0.2):
        
-    es = keras.callbacks.EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience = 5)
+    es = keras.callbacks.EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience = 12)
     model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=['accuracy'])
     history = model.fit(X_train, y_train, epochs = epochs, validation_split = validation_split, batch_size = batch_size, callbacks = [es])
  
@@ -55,7 +55,7 @@ def train_model(model, X_train, y_train, filename = None, optimizer = keras.opti
 
 def finetune_model(model, X_train, y_train, filename = None, optimizer = keras.optimizers.SGD(learning_rate = 0.0005, momentum=0.9), batch_size = 16, epochs = 100, validation_split = 0.2, iterations = 1, unfreeze_loop = 2):
 
-    es = keras.callbacks.EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience = 5)
+    es = keras.callbacks.EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience = 10, min_delta=0)
 
     for i in range(iterations):
         for layer in model.layers[-(unfreeze_loop * (i + 1)):]:
@@ -107,7 +107,16 @@ def predict_metrics(model, X_test, y_test, filename=None):
     y_test = np.argmax(y_test, axis = -1)
 
     print(classification_report(predict_labels, y_test))
-
+    cf_matrix = confusion_matrix(y_test, predict_labels)
+    disp = ConfusionMatrixDisplay(cf_matrix, display_labels=["0%", "33%", "66%", "100%"])
+    disp.plot(xticks_rotation=45, cmap="viridis")
+    plt.title('Confusion Matrix')
+    plt.xlabel('Predicted Label')
+    plt.ylabel('True Label')
+    print('F1 score: ', f1_score(predict_labels, y_test, average="weighted"))
+    
     if filename:
         with open('../outputs/' + filename + '_cr', 'wb') as f:
             pickle.dump(classification_report(predict_labels, y_test), f)
+
+    return predict_labels, y_test
