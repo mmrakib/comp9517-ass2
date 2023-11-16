@@ -64,7 +64,7 @@ def plot_train_data(history):
 
     #accuracy
     pt2 = plt.subplot(1,2,2)
-    pt2.title.set_text("Mono")
+    pt2.title.set_text("Accuracy")
     plt.plot(history.history['accuracy'], label='accuracy')
     plt.plot(history.history['val_accuracy'], label = 'val_accuracy')
     plt.xlabel('Epoch')

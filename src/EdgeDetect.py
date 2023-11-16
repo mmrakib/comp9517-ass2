@@ -18,24 +18,29 @@ import itertools
 
 import math
 
+import Dataloader
+
+import pickle
+
+
 # Pavement crack detection using the Gabor filter
 # https://ieeexplore.ieee.org/document/6728529
 
 def initialize_model(): 
     model = keras.models.Sequential()
-    model.add(keras.layers.Conv2D(64, (3, 3), activation='relu', input_shape=(240, 280, 4)))
+    model.add(keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(240, 280, 3)))
     model.add(keras.layers.MaxPooling2D((2, 2)))
-    model.add(keras.layers.Conv2D(128, (3, 3), activation='relu'))
+    model.add(keras.layers.Conv2D(64, (3, 3), activation='relu'))
     model.add(keras.layers.MaxPooling2D((2, 2)))
     model.add(keras.layers.GlobalAveragePooling2D())
     model.add(keras.layers.Dense(64, activation='relu'))
     model.add(keras.layers.Dense(16, activation='relu'))
-    model.add(keras.layers.Dense(1, activation='relu'))
+    model.add(keras.layers.Dense(1, activation='linear'))
     model.add(keras.layers.Dense(4, activation = "softmax"))
 
     return model
 
-def train_model(model, x_train, y_train, optimizer="adam", batch_size = 16, epochs = 100, validation_split = 0.25, workers=18):
+def train_model(model, x_train, y_train, filename = None, optimizer="adam", batch_size = 16, epochs = 100, validation_split = 0.25, workers=18):
 
     y_train = LabelEncoder().fit_transform(y_train)
     y_train = keras.utils.to_categorical(y_train)
@@ -49,7 +54,7 @@ def train_model(model, x_train, y_train, optimizer="adam", batch_size = 16, epoc
 
     with Pool(workers) as pool:
         images_tmp = pool.map(filter_images, images_split, chunksize=1)
-
+    del images_split
     
     for i in range(0, len(images_tmp)):
         if i == 0:
@@ -58,11 +63,14 @@ def train_model(model, x_train, y_train, optimizer="adam", batch_size = 16, epoc
         images = np.append(images, images_tmp[i], axis=0)
     images = np.moveaxis(images, 1, -1)
 
-    
+    #es = keras.callbacks.EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience = 5)
     model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=['accuracy'])
     history = model.fit(images, y_train, epochs = epochs, validation_split = validation_split, 
-                        batch_size = batch_size)
+                        batch_size = batch_size)#, callbacks = [es])
     
+    if filename != None:
+        model.save("../models/" + filename + ".keras")
+
     return history
 
 def predict(model, x_test, y_true, workers=18):
@@ -75,7 +83,7 @@ def predict(model, x_test, y_true, workers=18):
 
     with Pool(workers) as pool:
         images_tmp = pool.map(filter_images, images_split, chunksize=1)
-
+    del images_split
     
     for i in range(0, len(images_tmp)):
         if i == 0:
@@ -98,7 +106,7 @@ def filter_images(images):
     filters_tri  = [0,1,2,3,4,5]
     filters_mean = [2,4]
 
-    images_filt = np.zeros((images.shape[0], 4, images.shape[1], images.shape[2])) #len(filters)+2
+    images_filt = np.zeros((images.shape[0], 3, images.shape[1], images.shape[2])) #len(filters)+2
     max_val = images.max()
     for i in range(0, images.shape[0]):
         img_inv = (-1*images[i]) + 1
@@ -118,18 +126,18 @@ def filter_images(images):
         images_filt[i][0] = Dataloader.calc_contrast_stretch(images_filt[i][0], 
                                         images_filt[i][0].min(), images_filt[i][0].max())
 
-        images_filt[1][0] *= img_inv
-        images_filt[1][1] *= img_inv
-        images_filt[1][2] *= img_inv
+        images_filt[i][0] = np.clip((1*images_filt[i][0] + (3*img_inv))/4, 0,1)
+        images_filt[i][1] = np.clip((1*images_filt[i][1] + (3*img_inv))/4, 0,1)
+        images_filt[i][2] = np.clip((1*images_filt[i][2] + (3*img_inv))/4, 0,1)
 
         #for k in [max_val*.1, max_val*.4, max_val*.65, max_val*.8, max_val*.9]:
         #    images_filt[i][4] +=  img_inv > k
         #images_filt[i][4] /= 4
 
-        #for j in range(0, 5):
-        #    plt.subplot(2,3,j+1)
-        #    plt.imshow(images_filt[i][j], cmap='grey')
-        #plt.show()
+        for j in range(0, 3):
+            plt.subplot(2,3,j+1)
+            plt.imshow(images_filt[i][j], cmap='grey')
+        plt.show()
     return images_filt
 
 def make_filters(freqs):
@@ -141,6 +149,10 @@ def make_filters(freqs):
             kernels[i].append(np.real(gabor_kernel(freq, theta/180 * math.pi)))
         i+=1
     return kernels
+
+def save_history(history, filename):
+    with open('../histories/' + filename, 'wb') as file:
+        pickle.dump(history.history, file)
 
 def conv(img, filter, thresh_tri=True, thresh_mean=False):
     img = (img - img.mean()) / img.std()
@@ -195,12 +207,12 @@ import Dataloader
 import performancetest as pt
 if __name__ == '__main__':
     train_imgs, train_probs, train_types, test_imgs, test_probs, test_types = \
-            Dataloader.load_and_preprocess_dataset(out_types="All", wire_removal="Crop", augment="None", aug_types=["Flip"], crop_pix=20, shuffle=True, balance_probs=2)
-            #Dataloader.load_and_preprocess_dataset(out_types="Poly", wire_removal="Crop", augment="All", aug_types=["Flip"], crop_pix=20, shuffle=True, balance_probs=2)
+            Dataloader.load_and_preprocess_dataset(out_types="All", wire_removal="Crop", augment="All", aug_types=["Flip"], crop_pix=20, shuffle=True, balance_probs=2)
+            #Dataloader.load_and_preprocess_dataset(out_types="All", wire_removal="Crop", augment="None", aug_types=["Flip"], crop_pix=20, shuffle=True, balance_probs=2)
 
 
     model = initialize_model()
-    history = train_model(model, train_imgs, train_probs, epochs=3, batch_size=1000)
+    history = train_model(model, train_imgs, train_probs, epochs=300, batch_size=1000)
     #plot_loss(history)
     #plot_accuracy(history)
 
