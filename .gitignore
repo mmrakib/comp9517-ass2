@@ -12,3 +12,7 @@ src/__pycache__/performancetest.cpython-39.pyc
 src/__pycache__/Dataloader.cpython-39.pyc
 src/__pycache__/model_gabor.cpython-39.pyc
 src/__pycache__/pyBench.cpython-39.pyc
+
+src/utils
+src/labels.csv
+src/images

@@ -5,7 +5,7 @@ This is the offical code repository for group *Adult Supervision*.
 **Developers**
 - Mohammad M. Rakib (z5361151)
 - adrianne_sun (z5373505)
-- JaymooHackray (z)
+- Huan Jie (Jay) Choo (z5367538)
 - Plushii (z5404816)
 - roterex (z5169764)
 
