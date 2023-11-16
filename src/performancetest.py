@@ -3,13 +3,16 @@ import numpy as np
 from sklearn import metrics         as sk_met
 
 
-def display_results(y_true_m, y_true_p, y_predict_m, y_predict_p):
+def display_results(y_true_m=[], y_true_p=[], y_predict_m=[], y_predict_p=[]):
     y_true    = np.concatenate((y_true_m,    y_true_p),    axis=0) 
     y_predict = np.concatenate((y_predict_m, y_predict_p), axis=0) 
 
-    print_scores(y_true_m, y_predict_m, "Mono Results    ")
-    print_scores(y_true_p, y_predict_p, "Poly Results    ")
-    print_scores(y_true,   y_predict, "Combined Results")
+    if y_true_m != [] and y_predict_m != []:
+        print_scores(y_true_m, y_predict_m, "Mono Results    ")
+    if y_true_p != [] and y_predict_p != []:
+        print_scores(y_true_p, y_predict_p, "Poly Results    ")
+        if y_true_m != [] and y_predict_m != []:
+            print_scores(y_true,   y_predict, "Combined Results")
     
     display_conf_mat([y_true_m, y_true, y_true_p], [y_predict_m, y_predict, y_predict_p])
 
@@ -36,7 +39,8 @@ def display_conf_mat(y_true_lst, y_predict_lst):
     prob_name_lst = ["0%", "33%", "66%", "100%"]
     plt_names = ["Mono", "Combined", "Poly"]
     for i in range(0,3):
-        cf_matrix = sk_met.confusion_matrix(y_true_lst[i], y_predict_lst[i])
+        if y_true_lst[i] != [] and y_predict_lst[i] != []:
+            cf_matrix = sk_met.confusion_matrix(y_true_lst[i], y_predict_lst[i])
         disp = sk_met.ConfusionMatrixDisplay(cf_matrix, display_labels=prob_name_lst)
         disp.plot(ax=axes[i], xticks_rotation=45)
         disp.ax_.set_title(plt_names[i])
