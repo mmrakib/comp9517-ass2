@@ -46,9 +46,6 @@ def display_conf_mat(y_true_lst, y_predict_lst):
 
     f.text(0.4, 0.1, 'Predicted label', ha='left')
     plt.subplots_adjust(wspace=0.40, hspace=0.1)
-
-
-    #f.colorbar(disp.im_, ax=axes)
     plt.show()
 
 def plot_train_data(history):

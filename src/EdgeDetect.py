@@ -134,10 +134,10 @@ def filter_images(images):
         #    images_filt[i][4] +=  img_inv > k
         #images_filt[i][4] /= 4
 
-        for j in range(0, 3):
-            plt.subplot(2,3,j+1)
-            plt.imshow(images_filt[i][j], cmap='grey')
-        plt.show()
+        #for j in range(0, 3):
+        #    plt.subplot(2,3,j+1)
+        #    plt.imshow(images_filt[i][j], cmap='grey')
+        #plt.show()
     return images_filt
 
 def make_filters(freqs):
@@ -207,12 +207,12 @@ import Dataloader
 import performancetest as pt
 if __name__ == '__main__':
     train_imgs, train_probs, train_types, test_imgs, test_probs, test_types = \
-            Dataloader.load_and_preprocess_dataset(out_types="All", wire_removal="Crop", augment="All", aug_types=["Flip"], crop_pix=20, shuffle=True, balance_probs=2)
+        Dataloader.load_and_preprocess_dataset(out_types="All", wire_removal="None", augment="None", aug_types=["Flip"], crop_pix=20, shuffle=True, balance_probs=2)
             #Dataloader.load_and_preprocess_dataset(out_types="All", wire_removal="Crop", augment="None", aug_types=["Flip"], crop_pix=20, shuffle=True, balance_probs=2)
 
 
     model = initialize_model()
-    history = train_model(model, train_imgs, train_probs, epochs=300, batch_size=1000)
+    history = train_model(model, train_imgs, train_probs, filename="Edge-Detect-Model",  epochs=800, batch_size=1000)
     #plot_loss(history)
     #plot_accuracy(history)
 
