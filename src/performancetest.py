@@ -41,7 +41,10 @@ def display_conf_mat(y_true_lst, y_predict_lst):
     for i in range(0,3):
         if y_true_lst[i] != [] and y_predict_lst[i] != []:
             cf_matrix = sk_met.confusion_matrix(y_true_lst[i], y_predict_lst[i])
-        disp = sk_met.ConfusionMatrixDisplay(cf_matrix, display_labels=prob_name_lst)
+        if len(y_true_lst[i]) == 4 and len(y_predict_lst[i]) == 4:
+            disp = sk_met.ConfusionMatrixDisplay(cf_matrix, display_labels=prob_name_lst)
+        else:
+            disp = sk_met.ConfusionMatrixDisplay(cf_matrix)
         disp.plot(ax=axes[i], xticks_rotation=45)
         disp.ax_.set_title(plt_names[i])
         disp.ax_.set_xlabel('')
