@@ -1,6 +1,10 @@
 import time
 import random
 
+
+# ignore this it just prints out how long functions took to complete
+
+
 disable_timing = False
 print_args = False
 def timefunc(method):
