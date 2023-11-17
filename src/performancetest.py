@@ -7,11 +7,11 @@ def display_results(y_true_m=[], y_true_p=[], y_predict_m=[], y_predict_p=[]):
     y_true    = np.concatenate((y_true_m,    y_true_p),    axis=0) 
     y_predict = np.concatenate((y_predict_m, y_predict_p), axis=0) 
 
-    if y_true_m != [] and y_predict_m != []:
+    if len(y_true_m) > 0 and len(y_predict_m) > 0:
         print_scores(y_true_m, y_predict_m, "Mono Results    ")
-    if y_true_p != [] and y_predict_p != []:
+    if len(y_true_p) > 0 and len(y_predict_p) > 0:
         print_scores(y_true_p, y_predict_p, "Poly Results    ")
-        if y_true_m != [] and y_predict_m != []:
+        if len(y_true_m) > 0 and len(y_predict_m) > 0:
             print_scores(y_true,   y_predict, "Combined Results")
     
     display_conf_mat([y_true_m, y_true, y_true_p], [y_predict_m, y_predict, y_predict_p])
@@ -39,7 +39,7 @@ def display_conf_mat(y_true_lst, y_predict_lst):
     prob_name_lst = ["0%", "33%", "66%", "100%"]
     plt_names = ["Mono", "Combined", "Poly"]
     for i in range(0,3):
-        if y_true_lst[i] != [] and y_predict_lst[i] != []:
+        if len(y_true_lst[i]) > 0 and len(y_predict_lst[i]) > 0:
             cf_matrix = sk_met.confusion_matrix(y_true_lst[i], y_predict_lst[i])
         if len(y_true_lst[i]) == 4 and len(y_predict_lst[i]) == 4:
             disp = sk_met.ConfusionMatrixDisplay(cf_matrix, display_labels=prob_name_lst)
