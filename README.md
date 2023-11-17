@@ -33,3 +33,6 @@ VGG-19 all at once:         src/AllAtOnce_VGG19.ipynb
 VGG-19 by type:             src/cnn-test.py
 ResNet:                     src/resnet.ipynb
 Edge Detection:             src/EdgeDetect-test.ipynb
+
+**Trained Model Files**
+https://drive.google.com/drive/folders/1Vmo-yltTKYTgKgp2X27KkTd0YbgfeYWd?usp=sharing
