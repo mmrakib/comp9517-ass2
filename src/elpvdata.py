@@ -1,4 +1,4 @@
-import elpv_reader
+import elpv.utils.elpv_reader as elpv_reader
 import sklearn.model_selection
 import random
 

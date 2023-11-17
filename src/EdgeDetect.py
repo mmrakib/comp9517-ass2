@@ -14,7 +14,6 @@ import cv2 as cv
 from pyBench import timefunc
 
 from multiprocessing import Pool
-import itertools
 
 import math
 
