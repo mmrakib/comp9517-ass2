@@ -1,4 +1,4 @@
-# python 3.9.4 recommended
+# python 3.9.4 recommended (3.9.3 installed on most uni systems should also work)
 
 absl-py==2.0.0
 astunparse==1.6.3

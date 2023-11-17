@@ -28,43 +28,23 @@ def load_and_preprocess_dataset(out_probs=[0,1,2,3], simple_probs=False, out_typ
                         "Rot" = rotate by 1,2, and 3 deg in either direction 7x, 
                         "Bright" = increase and decrease brightness by 10% 3x]
     :param shuffle: shuffle both test and train datasets before returning (use for testing preprocessing methods)
-    :param c_stretch: should the images be contrast stretched to normalise and enhance features
+    :param c_stretch: [Disabled] should the images be contrast stretched to normalise and enhance features
     :param flatten_blacks: clips the darkest n% of pixels to pure black
     :param balance_probs: 0 = no effect, 1+ = max number of images for a prob reduced to n * that of the minimum
     """
     images, probs, types = load_dataset()
     images = images.astype("float32") / 255
 
-    print(len(probs[probs == 0]), \
-            len(probs[probs == 0.3333333333333333]), \
-            len(probs[probs == 0.6666666666666666]), \
-            len(probs[probs == 1]))
-
     images, probs, types = reduce_dataset(out_probs, simple_probs, out_types, images, probs, types)
 
-    print(len(probs[probs == 0]), \
-            len(probs[probs == 0.3333333333333333]), \
-            len(probs[probs == 0.6666666666666666]), \
-            len(probs[probs == 1]))
+    #if c_stretch:
+    #    images = contrast_stretch(images, flatten_blacks)
 
-    if c_stretch:
-        images = contrast_stretch(images, flatten_blacks)
-    
-    
     images = remove_cell_wires(images, wire_removal, crop_pix)
     images = np.float32(images)
 
     train_imgs, train_probs, train_types, test_imgs, test_probs, test_types =\
             split_t_t_data(images, probs, types, out_types)
-
-    print(len(train_probs[train_probs == 0]), \
-            len(train_probs[train_probs == 0.3333333333333333]), \
-            len(train_probs[train_probs == 0.6666666666666666]), \
-            len(train_probs[train_probs == 1]))
-    print(len(test_probs[test_probs == 0]), \
-            len(test_probs[test_probs == 0.3333333333333333]), \
-            len(test_probs[test_probs == 0.6666666666666666]), \
-            len(test_probs[test_probs == 1]))
 
     if(augment == "All" or augment == "Train"):
         train_imgs, train_probs, train_types = expand_dataset(train_imgs, train_probs, train_types, aug_types)
@@ -76,19 +56,7 @@ def load_and_preprocess_dataset(out_probs=[0,1,2,3], simple_probs=False, out_typ
                 shuffle_set(train_imgs, train_probs, train_types, test_imgs, test_probs, test_types)
 
     if(balance_probs > 0):
-        train_imgs, train_probs, train_types =\
-                balance_prob_nums(train_imgs, train_probs, train_types, balance_probs)
-        #test_imgs, test_probs, test_types =\
-        #        balance_prob_nums(test_imgs, test_probs, test_types, balance_probs)
-
-    print(len(train_probs[train_probs == 0]), \
-            len(train_probs[train_probs == 0.3333333333333333]), \
-            len(train_probs[train_probs == 0.6666666666666666]), \
-            len(train_probs[train_probs == 1]))
-    print(len(test_probs[test_probs == 0]), \
-            len(test_probs[test_probs == 0.3333333333333333]), \
-            len(test_probs[test_probs == 0.6666666666666666]), \
-            len(test_probs[test_probs == 1]))
+        train_imgs, train_probs, train_types = balance_prob_nums(train_imgs, train_probs, train_types, balance_probs)
 
     if(channels == 3):
         train_imgs = make_3_channel(train_imgs)
